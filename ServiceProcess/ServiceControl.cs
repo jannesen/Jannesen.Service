@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using Jannesen.Service.Windows;
 
@@ -11,8 +11,7 @@ namespace Jannesen.Service.ServiceProcess
             Console.WriteLine("# create/update service: " + serviceName);
 
             if (accountName.IndexOf('\\') < 0) {
-                switch(accountName.ToUpper())
-                {
+                switch(accountName.ToUpper()) {
                 case "NT SERVICE":
                     accountName     = "NT SERVICE\\" + serviceName;
                     accountPassword = null;

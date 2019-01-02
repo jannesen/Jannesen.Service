@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.IO;
@@ -28,8 +28,7 @@ namespace Jannesen.Service.ServiceProcess
                 if (AccountName.IndexOf('\\') > 0)
                     return AccountName;
 
-                switch(AccountName.ToUpper())
-                {
+                switch(AccountName.ToUpper()) {
                 case "NT SERVICE":          return "NT SERVICE\\" + ServiceName;
                 case "LOCAL SERVICE":
                 case "NETWORK SERVICE":
@@ -47,8 +46,7 @@ namespace Jannesen.Service.ServiceProcess
         public              bool            predefinedAccount
         {
             get {
-                switch(AccountName.ToUpper())
-                {
+                switch(AccountName.ToUpper()) {
                 case "LOCAL SERVICE":
                 case "NETWORK SERVICE":
                 case "LOCAL SYSTEM":

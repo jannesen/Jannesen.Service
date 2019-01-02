@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -295,8 +295,7 @@ namespace Jannesen.Service.ServiceProcess
                 _serviceName = GetAppSettings("service-name");
 
                 if (args.Length>0) {
-                    switch(args[0])
-                    {
+                    switch(args[0]) {
                     case "start":           return ServiceStart();
                     case "stop":            return ServiceStop();
                     case "install":         return ServiceInstall();
@@ -505,8 +504,7 @@ namespace Jannesen.Service.ServiceProcess
 
         private                 bool                            _consoleCtrlHandler(UInt32 CtrlType)
         {
-            switch(CtrlType)
-            {
+            switch(CtrlType) {
             case NativeMethods.CTRL_C_EVENT:
             case NativeMethods.CTRL_BREAK_EVENT:
                 if (!_stopping)
@@ -549,8 +547,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         private     unsafe      UInt32                          _serviceControlCallbackEx(UInt32 Control, UInt32 EventType, IntPtr EventData, IntPtr EventContext)
         {
-            switch(Control)
-            {
+            switch(Control) {
             case NativeMethods.SERVICE_CONTROL_INTERROGATE:
                 break;
 
@@ -638,8 +635,7 @@ namespace Jannesen.Service.ServiceProcess
                     }
                 }
                 else {
-                    switch(_serviceStatus.CurrentState)
-                    {
+                    switch(_serviceStatus.CurrentState) {
                     case NativeMethods.SERVICE_RUNNING:
                         _writeConsole("[Press control-C to stop service]");
                         break;
@@ -835,8 +831,7 @@ namespace Jannesen.Service.ServiceProcess
 
         private     static      bool                            _hasConsole()
         {
-            switch ((int)NativeMethods.GetStdHandle(NativeMethods.STD_OUTPUT_HANDLE))
-            {
+            switch ((int)NativeMethods.GetStdHandle(NativeMethods.STD_OUTPUT_HANDLE)) {
             case -1:
             case 0:
                 return false;
@@ -847,8 +842,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         private     static      string                          _mapEventTypeToString(EventLogEntryType type)
         {
-            switch(type)
-            {
+            switch(type) {
             case EventLogEntryType.Error:           return "ERROR";
             case EventLogEntryType.Warning:         return "WARNING";
             case EventLogEntryType.Information:     return "INFO";

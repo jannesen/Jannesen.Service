@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Jannesen.Service.Windows
@@ -131,8 +131,7 @@ namespace Jannesen.Service.Windows
         }
         public static unsafe    Sid         AccountSid(string SystemName, string AccountName)
         {
-            switch(AccountName)
-            {
+            switch(AccountName) {
             case "Nobody":                  return Nobody;
             case "Everyone":                return Everyone;
             case "CreatorOwner":            return CreatorOwner;
