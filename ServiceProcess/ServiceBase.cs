@@ -165,8 +165,7 @@ namespace Jannesen.Service.ServiceProcess
 
         public                  void                            EnableDebugLog(bool enable)
         {
-            lock(_debugLogFlushLock)
-            {
+            lock(_debugLogFlushLock) {
                 if (enable) {
                     _debugLogDirectory = GetAppSettings("logdirectory") + @"\" + _serviceName;
                     if (!Directory.Exists(_debugLogDirectory))
@@ -175,8 +174,7 @@ namespace Jannesen.Service.ServiceProcess
                     _debugLogOpen(DateTime.UtcNow);
                     _debugLogFlushTimer = new Timer(_debugLogFlush, null, 1000, Timeout.Infinite);
 
-                    lock(_logLock)
-                    {
+                    lock(_logLock) {
                         _debugLogBuffer = new List<LogEntry>(1024);
                         _debugLogActive = true;
                         _debugLogWrite(DateTime.UtcNow, null, "INFO", "DebugLogging enabled.", null);
@@ -203,8 +201,7 @@ namespace Jannesen.Service.ServiceProcess
         public                  void                            LogDebug(object source, string type, string message)
         {
             if (_debugLogActive) {
-                lock(_logLock)
-                {
+                lock(_logLock) {
                     _debugLogWrite(DateTime.UtcNow, SafeToString(source), type, message, null);
                 }
             }
@@ -212,8 +209,7 @@ namespace Jannesen.Service.ServiceProcess
         public                  void                            LogDebug(object source, string type, string message, object data)
         {
             if (_debugLogActive) {
-                lock(_logLock)
-                {
+                lock(_logLock) {
                     _debugLogWrite(DateTime.UtcNow, SafeToString(source), type, message, data);
                 }
             }
@@ -244,8 +240,7 @@ namespace Jannesen.Service.ServiceProcess
                 DateTime    timestamp = DateTime.UtcNow;
                 string      srcmsg = (source != null) ? source + ": " + message : message;
 
-                lock(_logLock)
-                {
+                lock(_logLock) {
                     string stimestamp = _logTimestamp ? timestamp.ToString("HH:mm:ss.fff") : null;
 
                     if (_debuggerLogging)
@@ -301,8 +296,7 @@ namespace Jannesen.Service.ServiceProcess
                     case "install":         return ServiceInstall();
                     case "uninstall":       return ServiceUninstall();
 
-                    case "run":
-                        {
+                    case "run": {
                             string[]    newArgs = new string[args.Length-1];
 
                             Array.Copy(args, 1, newArgs, 0, args.Length-1);
@@ -381,8 +375,7 @@ namespace Jannesen.Service.ServiceProcess
                 bool        DumpStack    = false;
                 string      StackTrace   = string.Empty;
 
-                lock(_lockErrorToString)
-                {
+                lock(_lockErrorToString) {
                     while (err!=null) {
                         string  Msg;
 
@@ -713,11 +706,9 @@ namespace Jannesen.Service.ServiceProcess
         {
             List<LogEntry>      buffer;
 
-            lock(_debugLogFlushLock)
-            {
+            lock(_debugLogFlushLock) {
                 try {
-                    lock(_logLock)
-                    {
+                    lock(_logLock) {
                         buffer = _debugLogBuffer;
                         _debugLogBuffer = _debugLogActive ? new List<LogEntry>(1024) : null;
                     }
