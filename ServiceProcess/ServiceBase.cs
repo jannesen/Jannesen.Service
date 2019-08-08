@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -143,7 +144,7 @@ namespace Jannesen.Service.ServiceProcess
         protected   virtual     int                             ServiceInstall()
         {
             Installer installer = new Installer(InstallMode.Install);
-            installer.Execute(this);
+            installer.Execute();
             ServiceInstaller(installer);
 
             return 0;
@@ -152,7 +153,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             Installer installer = new Installer(InstallMode.Uninstall);
             ServiceInstaller(installer);
-            installer.Execute(this);
+            installer.Execute();
             return 0;
         }
         protected   abstract    void                            ServiceInstaller(Installer installer);
@@ -241,7 +242,7 @@ namespace Jannesen.Service.ServiceProcess
                 string      srcmsg = (source != null) ? source + ": " + message : message;
 
                 lock(_logLock) {
-                    string stimestamp = _logTimestamp ? timestamp.ToString("HH:mm:ss.fff") : null;
+                    string stimestamp = _logTimestamp ? timestamp.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture) : null;
 
                     if (_debuggerLogging)
                         Trace.WriteLine(stimestamp != null ? stimestamp + ": " + srcmsg : srcmsg);
@@ -262,7 +263,9 @@ namespace Jannesen.Service.ServiceProcess
         }
         protected   virtual     void                            LogDataWriter(StreamWriter writer, object data)
         {
+#pragma warning disable CA1062 // Validate arguments of public methods
             writer.Write(data.ToString());
+#pragma warning restore CA1062
         }
         public      static      string                          GetAppSettings(string name)
         {
@@ -286,6 +289,8 @@ namespace Jannesen.Service.ServiceProcess
         public                  int                             Run(string[] args)
         {
             try {
+                if (args is null) throw new ArgumentNullException(nameof(args));
+
                 _console     = _hasConsole();
                 _serviceName = GetAppSettings("service-name");
 
@@ -451,7 +456,7 @@ namespace Jannesen.Service.ServiceProcess
                             Msg = Msg.Replace("\r\n", " ");
 
                             if (Message!=null) {
-                                if (!Message.EndsWith("."))
+                                if (!Message.EndsWith(".", StringComparison.InvariantCulture))
                                     Message += ".";
 
                                 Message += " "+Msg;
@@ -575,7 +580,7 @@ namespace Jannesen.Service.ServiceProcess
                 _setServiceStatus();
 
                 System.Threading.Thread.CurrentThread.Name           = "Service";
-                System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
                 try {
                     ParseArgs(args);
@@ -688,7 +693,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             try {
                 _debugLogBuffer.Add(new LogEntry() {
-                                        Timestamp = DateTime.UtcNow,
+                                        Timestamp = timestamp,
                                         Source    = SafeToString(source),
                                         Type      = type,
                                         Message   = message,
@@ -735,7 +740,7 @@ namespace Jannesen.Service.ServiceProcess
 
             var streamWriter = _debugLogStreamWriter;
 
-            streamWriter.Write(logEntry.Timestamp.ToString("MM/dd HH:mm:ss.fff"));
+            streamWriter.Write(logEntry.Timestamp.ToString("MM/dd HH:mm:ss.fff", CultureInfo.InvariantCulture));
             streamWriter.Write('\t');
             if (logEntry.Source != null)    streamWriter.Write(logEntry.Source);
             streamWriter.Write("\t");
@@ -746,7 +751,7 @@ namespace Jannesen.Service.ServiceProcess
             int     e = logEntry.Message.Length;
             int     p;
 
-            while ((p = logEntry.Message.IndexOf("\r\n", b)) >= 0) {
+            while ((p = logEntry.Message.IndexOf("\r\n", b, StringComparison.InvariantCulture)) >= 0) {
                 while (b < p)
                     streamWriter.Write(logEntry.Message[b++]);
 
@@ -785,14 +790,14 @@ namespace Jannesen.Service.ServiceProcess
                 _debugLogDay = day;
 
                 var     datetime      = new DateTime(day * TimeSpan.TicksPerDay);
-                string  baseFileName  = _debugLogDirectory + @"\" + datetime.ToString(@"yyyy\\MM\\") + _serviceName + datetime.ToString(@"-yyyy-MM-dd");
+                string  baseFileName  = _debugLogDirectory + @"\" + datetime.ToString(@"yyyy\\MM\\", CultureInfo.InvariantCulture) + _serviceName + datetime.ToString(@"-yyyy-MM-dd", CultureInfo.InvariantCulture);
                 string  directoryName = Path.GetDirectoryName(baseFileName);
 
                 if (!Directory.Exists(directoryName))
                     Directory.CreateDirectory(directoryName);
 
                 for (int seq = 1 ; seq < 100 ; ++ seq) {
-                    string fileName = baseFileName + "-" + seq.ToString("D3") + ".log";
+                    string fileName = baseFileName + "-" + seq.ToString("D3", CultureInfo.InvariantCulture) + ".log";
 
                     if (!File.Exists(fileName)) {
                         _debugLogStreamWriter = new StreamWriter(fileName, false, System.Text.Encoding.UTF8, 0x10000);
@@ -852,11 +857,11 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public      static      string                          SafeToString(object obj)
+        public      static      string                          SafeToString(object o)
         {
-            if (obj != null) {
+            if (o != null) {
                 try {
-                    return obj.ToString();
+                    return o.ToString();
                 }
                 catch(Exception err) {
                     return "[Error: " + err.Message + "]";

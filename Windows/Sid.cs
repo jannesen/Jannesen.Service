@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Jannesen.Service.Windows
 {
-    public  struct  Sid
+    public  struct  Sid: IEquatable<Sid>
     {
         private static  Sid                 _Null = new Sid();
 
@@ -116,22 +116,26 @@ namespace Jannesen.Service.Windows
             }
         }
 
-        public static           Sid         AccountSid(string AccountName)
-        {
-            if (AccountName.IndexOf('\\') < 0)
-                return AccountSid(null, AccountName);
+        public static           Sid         AccountSid(string accountName)
+       {
+            if (accountName is null) throw new ArgumentNullException(nameof(accountName));
 
-            using (System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry("WinNT://" + AccountName.Replace('\\', '/')))
+            if (accountName.IndexOf('\\') < 0)
+                return AccountSid(null, accountName);
+
+            using (System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry("WinNT://" + accountName.Replace('\\', '/')))
             {
                 if (entry.Properties["objectSid"].Count == 0)
-                    throw new Exception("Unknown domain/username '" + AccountName + "'.");
+                    throw new Exception("Unknown domain/username '" + accountName + "'.");
 
                 return new Sid((byte[])entry.Properties["objectSid"].Value);
             }
         }
-        public static unsafe    Sid         AccountSid(string SystemName, string AccountName)
+        public static unsafe    Sid         AccountSid(string systemName, string accountName)
         {
-            switch(AccountName) {
+            if (accountName is null) throw new ArgumentNullException(nameof(accountName));
+
+            switch(accountName) {
             case "Nobody":                  return Nobody;
             case "Everyone":                return Everyone;
             case "CreatorOwner":            return CreatorOwner;
@@ -165,8 +169,8 @@ namespace Jannesen.Service.Windows
                     UInt32      cbSid = 96;
                     byte*       sid = stackalloc byte[(int)cbSid];
 
-                    if (!NativeMethods.LookupAccountName(SystemName, AccountName, sid, &cbSid, DomainName, &cbDomainName, &Use))
-                        throw NativeMethods.NewSystemError("System call LookupAccountName(\""+(SystemName!=null ? SystemName : ".")+"\",\"" + AccountName + "\") failed");
+                    if (!NativeMethods.LookupAccountName(systemName, accountName, sid, &cbSid, DomainName, &cbDomainName, &Use))
+                        throw NativeMethods.NewSystemError("System call LookupAccountName(\""+(systemName!=null ? systemName : ".")+"\",\"" + accountName + "\") failed");
 
                     return new Sid(sid);
                 }
@@ -190,7 +194,7 @@ namespace Jannesen.Service.Windows
         {
             return AccountName(null);
         }
-        public unsafe           string      AccountName(string SystemName)
+        public unsafe           string      AccountName(string systemName)
         {
             if (sid!=null) {
                 System.Text.StringBuilder   Name         = new System.Text.StringBuilder(256);
@@ -201,7 +205,7 @@ namespace Jannesen.Service.Windows
 
                 fixed(byte* psid = sid)
                 {
-                    if (!NativeMethods.LookupAccountSid(SystemName, psid, Name, &cbName, DomainName, &cbDomainName, &Use))
+                    if (!NativeMethods.LookupAccountSid(systemName, psid, Name, &cbName, DomainName, &cbDomainName, &Use))
                         throw NativeMethods.NewSystemError("System call LookupAccountSid failed");
                 }
 
@@ -278,6 +282,10 @@ namespace Jannesen.Service.Windows
                 return this==(Sid)o;
 
             return false;
+        }
+        public                  bool        Equals(Sid o)
+        {
+            return this == o;
         }
         public override         int         GetHashCode()
         {

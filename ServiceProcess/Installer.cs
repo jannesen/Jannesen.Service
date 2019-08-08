@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Jannesen.Service.Windows;
@@ -14,6 +15,7 @@ namespace Jannesen.Service.ServiceProcess
         Uninstall
     }
 
+#pragma warning disable CA1822
     public class Installer
     {
         public              InstallMode     InstallMode             { get ; private set ; }
@@ -28,11 +30,11 @@ namespace Jannesen.Service.ServiceProcess
                 if (AccountName.IndexOf('\\') > 0)
                     return AccountName;
 
-                switch(AccountName.ToUpper()) {
+                switch(AccountName.ToUpperInvariant()) {
                 case "NT SERVICE":          return "NT SERVICE\\" + ServiceName;
                 case "LOCAL SERVICE":
                 case "NETWORK SERVICE":
-                case "LOCAL SYSTEM":        return "NT AUTHORITY\\" + AccountName.ToUpper();
+                case "LOCAL SYSTEM":        return "NT AUTHORITY\\" + AccountName.ToUpperInvariant();
                 default:                    return System.Environment.MachineName + "\\" + AccountName;
                 }
             }
@@ -46,7 +48,7 @@ namespace Jannesen.Service.ServiceProcess
         public              bool            predefinedAccount
         {
             get {
-                switch(AccountName.ToUpper()) {
+                switch(AccountName.ToUpperInvariant()) {
                 case "LOCAL SERVICE":
                 case "NETWORK SERVICE":
                 case "LOCAL SYSTEM":
@@ -78,7 +80,7 @@ namespace Jannesen.Service.ServiceProcess
             AccountName        = ServiceBase.GetAppSettings("service-account-name", "LOCAL SERVICE");
         }
 
-        public              void            Execute(ServiceBase service)
+        public              void            Execute()
         {
             if (InstallMode == InstallMode.Install) {
                 InstallMode = InstallMode.Install;
@@ -111,8 +113,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         CreateEventSource()
+        public              void            CreateEventSource()
         {
             try {
                 Console.WriteLine("# Create event source: " + ServiceName);
@@ -130,8 +131,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         AccountLSASetServiceLogonRigh()
+        public              void            AccountLSASetServiceLogonRigh()
         {
             try {
                 Console.WriteLine("# Set lsa policies SeServiceLogonRight on user: " + AccountName);
@@ -148,8 +148,7 @@ namespace Jannesen.Service.ServiceProcess
                     DisplayError(err);
             }
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         AccountLSAResetAll()
+        public              void            AccountLSAResetAll()
         {
             try {
                 Console.WriteLine("# remove lsa policies from user: " + AccountName);
@@ -173,8 +172,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         SetStandardFileFolderRights()
+        public              void            SetStandardFileFolderRights()
         {
             try {
                 SetAclDirectory(ProgramDirectory, FileSystemRights.ReadAndExecute);
@@ -193,8 +191,7 @@ namespace Jannesen.Service.ServiceProcess
                     DisplayError(err);
             }
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         SetLogDirectoryRights()
+        public              void            SetLogDirectoryRights()
         {
             try {
                 if (ServiceBase.GetAppSettings("service-debuglog", "0") == "1") {
@@ -220,9 +217,10 @@ namespace Jannesen.Service.ServiceProcess
                     DisplayError(err);
             }
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         SetAclDirectory(string path, FileSystemRights rights)
+        public              void            SetAclDirectory(string path, FileSystemRights rights)
         {
+            if (path is null) throw new ArgumentNullException(nameof(path));
+
             try {
                 Console.WriteLine((InstallMode == InstallMode.Install ? "# set acl on directory: " : "# remove acl on directory: ") + path);
 
@@ -257,10 +255,10 @@ namespace Jannesen.Service.ServiceProcess
                     DisplayError(err);
             }
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         SetAclFile(string path, FileSystemRights rights)
+        public              void            SetAclFile(string path, FileSystemRights rights)
         {
+            if (path is null) throw new ArgumentNullException(nameof(path));
+
             try {
                 Console.WriteLine((InstallMode == InstallMode.Install ? "# set acl on file: " : "# remove acl on file: ") + path);
 
@@ -294,8 +292,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         DatabaseLoginUser()
+        public              void            DatabaseLoginUser()
         {
             try {
                 string role = ServiceBase.GetAppSettings("service-database-role", null);
@@ -311,42 +308,51 @@ namespace Jannesen.Service.ServiceProcess
                     DisplayError(err);
             }
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public              void            DatabaseLoginUser(string server, string database, string role)
         {
+            if (server is null) throw new ArgumentNullException(nameof(server));
+            if (database is null) throw new ArgumentNullException(nameof(database));
+            if (role is null) throw new ArgumentNullException(nameof(role));
+
             try {
-                if (AccountName.ToUpper() != "NT SERVICE")
+                if (AccountName.ToUpperInvariant() != "NT SERVICE")
                     return ;
 
                 string accountName = "NT SERVICE\\" + ServiceName;
 
-                using (SqlConnection sqlConnection = new SqlConnection("Server=" + server + ";Database=" + database + ";Current Language=us_english;Connection Reset=false;Connect Timeout=15;Pooling=No;Trusted_Connection=true"))
-                {
+                using (SqlConnection sqlConnection = new SqlConnection("Server=" + server + ";Database=" + database + ";Current Language=us_english;Connection Reset=false;Connect Timeout=15;Pooling=No;Trusted_Connection=true")) {
                     sqlConnection.Open();
 
-                    SqlCommand  sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text };
+                    using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                        Console.WriteLine("# database drop user: " + accountName);
+                        sqlCmd.CommandText = "IF EXISTS (SELECT * FROM sys.sysusers WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP USER [" + accountName.Replace("]", "[]") + "]";
+                        sqlCmd.ExecuteNonQuery();
+                    }
 
-                    Console.WriteLine("# database drop user: " + accountName);
-                    sqlCmd.CommandText = "IF EXISTS (SELECT * FROM sys.sysusers WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP USER [" + accountName.Replace("]", "[]") + "]";
-                    sqlCmd.ExecuteNonQuery();
-
-                    Console.WriteLine("# database drop login: " + accountName);
-                    sqlCmd.CommandText = "IF EXISTS (SELECT * FROM master.sys.server_principals WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP LOGIN [" + accountName.Replace("]", "[]") + "]";
-                    sqlCmd.ExecuteNonQuery();
+                    using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                        Console.WriteLine("# database drop login: " + accountName);
+                        sqlCmd.CommandText = "IF EXISTS (SELECT * FROM master.sys.server_principals WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP LOGIN [" + accountName.Replace("]", "[]") + "]";
+                        sqlCmd.ExecuteNonQuery();
+                    }
 
                     if (InstallMode == InstallMode.Install) {
-                        Console.WriteLine("# database create login: " + accountName);
-                        sqlCmd.CommandText = "CREATE LOGIN [" + accountName.Replace("]", "[]") + "] FROM WINDOWS";
-                        sqlCmd.ExecuteNonQuery();
+                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                            Console.WriteLine("# database create login: " + accountName);
+                            sqlCmd.CommandText = "CREATE LOGIN [" + accountName.Replace("]", "[]") + "] FROM WINDOWS";
+                            sqlCmd.ExecuteNonQuery();
+                        }
 
-                        Console.WriteLine("# database create user: " + accountName);
-                        sqlCmd.CommandText = "CREATE USER [" + accountName.Replace("]", "[]") + "]";
-                        sqlCmd.ExecuteNonQuery();
+                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                            Console.WriteLine("# database create user: " + accountName);
+                            sqlCmd.CommandText = "CREATE USER [" + accountName.Replace("]", "[]") + "]";
+                            sqlCmd.ExecuteNonQuery();
+                        }
 
-                        Console.WriteLine("# database add user to role: " + role);
-                        sqlCmd.CommandText = "ALTER ROLE [" + role.Replace("]", "[]") + "] ADD MEMBER [" + accountName.Replace("]", "[]") + "]";
-                        sqlCmd.ExecuteNonQuery();
+                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                            Console.WriteLine("# database add user to role: " + role);
+                            sqlCmd.CommandText = "ALTER ROLE [" + role.Replace("]", "[]") + "] ADD MEMBER [" + accountName.Replace("]", "[]") + "]";
+                            sqlCmd.ExecuteNonQuery();
+                        }
                     }
                 }
             }
@@ -360,9 +366,10 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         HttpUrlAcl(string binding)
+        public              void            HttpUrlAcl(string binding)
         {
+            if (binding is null) throw new ArgumentNullException(nameof(binding));
+
             try {
                 Exec("netsh", "http delete urlacl url=" + binding, redirectOutput:true);
 
@@ -379,8 +386,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         FirewallRemoveRules()
+        public              void            FirewallRemoveRules()
         {
             try {
                 PowerShell("$program = \"" + ProgramExe + "\"\r\n"  +
@@ -401,9 +407,12 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2200:RethrowToPreserveStackDetails")]
-        public void         FirewallAddRule(string name, string protocol, string port)
+        public              void            FirewallAddRule(string name, string protocol, string port)
         {
+            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (protocol is null) throw new ArgumentNullException(nameof(protocol));
+            if (port is null) throw new ArgumentNullException(nameof(port));
+
             try {
                 Console.WriteLine("# add firewall rule: " + name);
                 PowerShell("$dummy=New-NetFirewallRule -DisplayName \"" + name + "\" -Direction Inbound -Enabled true -Protocol " + protocol + " -LocalPort " + port + " -Action Allow -Program \"" + ProgramExe + "\"");
@@ -420,36 +429,45 @@ namespace Jannesen.Service.ServiceProcess
 
         public              void            Exec(string filename, string arguments, bool redirectOutput=false)
         {
-            System.Diagnostics.Process proc = new System.Diagnostics.Process();
-            proc.StartInfo.UseShellExecute = false;
-            proc.StartInfo.FileName  = filename;
-            proc.StartInfo.Arguments = arguments;
-            proc.StartInfo.RedirectStandardOutput = redirectOutput;
-            proc.StartInfo.RedirectStandardError = false;
-            proc.StartInfo.CreateNoWindow = false;
-            Console.WriteLine("# " + filename + " " + arguments);
-            proc.Start();
+            if (filename is null) throw new ArgumentNullException(nameof(filename));
+            if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
-            if (redirectOutput)
-                proc.StandardOutput.ReadToEnd();
+            using (var proc = new System.Diagnostics.Process()) { 
+                proc.StartInfo.UseShellExecute = false;
+                proc.StartInfo.FileName  = filename;
+                proc.StartInfo.Arguments = arguments;
+                proc.StartInfo.RedirectStandardOutput = redirectOutput;
+                proc.StartInfo.RedirectStandardError = false;
+                proc.StartInfo.CreateNoWindow = false;
+                Console.WriteLine("# " + filename + " " + arguments);
+                proc.Start();
 
-            proc.WaitForExit();
+                if (redirectOutput)
+                    proc.StandardOutput.ReadToEnd();
+
+                proc.WaitForExit();
+            }
         }
         public              void            PowerShell(string cmd)
         {
-            System.Diagnostics.Process proc = new System.Diagnostics.Process();
-            proc.StartInfo.UseShellExecute = false;
-            proc.StartInfo.FileName  = "powershell";
-            proc.StartInfo.Arguments = "-ExecutionPolicy Bypass -Noprofile -encodedCommand " + Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(cmd));
-            proc.StartInfo.RedirectStandardOutput = false;
-            proc.StartInfo.RedirectStandardError = false;
-            proc.StartInfo.CreateNoWindow = false;
-            proc.Start();
-            proc.WaitForExit();
+            if (cmd is null) throw new ArgumentNullException(nameof(cmd));
+
+            using(var proc = new System.Diagnostics.Process()) { 
+                proc.StartInfo.UseShellExecute = false;
+                proc.StartInfo.FileName  = "powershell";
+                proc.StartInfo.Arguments = "-ExecutionPolicy Bypass -Noprofile -encodedCommand " + Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(cmd));
+                proc.StartInfo.RedirectStandardOutput = false;
+                proc.StartInfo.RedirectStandardError = false;
+                proc.StartInfo.CreateNoWindow = false;
+                proc.Start();
+                proc.WaitForExit();
+            }
         }
 
         public              void            CreatePath(string path)
         {
+            if (path is null) throw new ArgumentNullException(nameof(path));
+
             if (!Directory.Exists(path)) {
                 CreatePath(Path.GetDirectoryName(path));
 
@@ -495,6 +513,9 @@ namespace Jannesen.Service.ServiceProcess
         {
         }
         public              InstallerException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+        protected           InstallerException(SerializationInfo info, StreamingContext context): base(info, context)
         {
         }
     }
