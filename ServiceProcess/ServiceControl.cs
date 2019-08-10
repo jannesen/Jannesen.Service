@@ -39,8 +39,7 @@ namespace Jannesen.Service.ServiceProcess
                 bool    fcreate = false;
 
                 try {
-                    using (var service = serviceManager.OpenService(serviceName))
-                    {
+                    using (var service = serviceManager.OpenService(serviceName)) {
                         service.ChangeServiceConfig(serviceDisplayName, binaryPathName, accountName, accountPassword);
                     }
                 }

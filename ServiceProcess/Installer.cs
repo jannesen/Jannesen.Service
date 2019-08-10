@@ -323,32 +323,32 @@ namespace Jannesen.Service.ServiceProcess
                 using (SqlConnection sqlConnection = new SqlConnection("Server=" + server + ";Database=" + database + ";Current Language=us_english;Connection Reset=false;Connect Timeout=15;Pooling=No;Trusted_Connection=true")) {
                     sqlConnection.Open();
 
-                    using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                    using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                         Console.WriteLine("# database drop user: " + accountName);
                         sqlCmd.CommandText = "IF EXISTS (SELECT * FROM sys.sysusers WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP USER [" + accountName.Replace("]", "[]") + "]";
                         sqlCmd.ExecuteNonQuery();
                     }
 
-                    using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                    using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                         Console.WriteLine("# database drop login: " + accountName);
                         sqlCmd.CommandText = "IF EXISTS (SELECT * FROM master.sys.server_principals WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP LOGIN [" + accountName.Replace("]", "[]") + "]";
                         sqlCmd.ExecuteNonQuery();
                     }
 
                     if (InstallMode == InstallMode.Install) {
-                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                             Console.WriteLine("# database create login: " + accountName);
                             sqlCmd.CommandText = "CREATE LOGIN [" + accountName.Replace("]", "[]") + "] FROM WINDOWS";
                             sqlCmd.ExecuteNonQuery();
                         }
 
-                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                             Console.WriteLine("# database create user: " + accountName);
                             sqlCmd.CommandText = "CREATE USER [" + accountName.Replace("]", "[]") + "]";
                             sqlCmd.ExecuteNonQuery();
                         }
 
-                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) { 
+                        using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                             Console.WriteLine("# database add user to role: " + role);
                             sqlCmd.CommandText = "ALTER ROLE [" + role.Replace("]", "[]") + "] ADD MEMBER [" + accountName.Replace("]", "[]") + "]";
                             sqlCmd.ExecuteNonQuery();
@@ -432,7 +432,7 @@ namespace Jannesen.Service.ServiceProcess
             if (filename is null) throw new ArgumentNullException(nameof(filename));
             if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
-            using (var proc = new System.Diagnostics.Process()) { 
+            using (var proc = new System.Diagnostics.Process()) {
                 proc.StartInfo.UseShellExecute = false;
                 proc.StartInfo.FileName  = filename;
                 proc.StartInfo.Arguments = arguments;
@@ -452,7 +452,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             if (cmd is null) throw new ArgumentNullException(nameof(cmd));
 
-            using(var proc = new System.Diagnostics.Process()) { 
+            using(var proc = new System.Diagnostics.Process()) {
                 proc.StartInfo.UseShellExecute = false;
                 proc.StartInfo.FileName  = "powershell";
                 proc.StartInfo.Arguments = "-ExecutionPolicy Bypass -Noprofile -encodedCommand " + Convert.ToBase64String(System.Text.Encoding.Unicode.GetBytes(cmd));

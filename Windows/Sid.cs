@@ -123,8 +123,7 @@ namespace Jannesen.Service.Windows
             if (accountName.IndexOf('\\') < 0)
                 return AccountSid(null, accountName);
 
-            using (System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry("WinNT://" + accountName.Replace('\\', '/')))
-            {
+            using (System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry("WinNT://" + accountName.Replace('\\', '/'))) {
                 if (entry.Properties["objectSid"].Count == 0)
                     throw new Exception("Unknown domain/username '" + accountName + "'.");
 
