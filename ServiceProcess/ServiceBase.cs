@@ -456,7 +456,7 @@ namespace Jannesen.Service.ServiceProcess
                             Msg = Msg.Replace("\r\n", " ");
 
                             if (Message!=null) {
-                                if (!Message.EndsWith(".", StringComparison.InvariantCulture))
+                                if (!Message.EndsWith(".", StringComparison.Ordinal))
                                     Message += ".";
 
                                 Message += " "+Msg;
@@ -751,7 +751,7 @@ namespace Jannesen.Service.ServiceProcess
             int     e = logEntry.Message.Length;
             int     p;
 
-            while ((p = logEntry.Message.IndexOf("\r\n", b, StringComparison.InvariantCulture)) >= 0) {
+            while ((p = logEntry.Message.IndexOf("\r\n", b, StringComparison.Ordinal)) >= 0) {
                 while (b < p)
                     streamWriter.Write(logEntry.Message[b++]);
 
