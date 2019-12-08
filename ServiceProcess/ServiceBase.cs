@@ -34,7 +34,7 @@ namespace Jannesen.Service.ServiceProcess
 
         private     static      ServiceBase                     _serviceInstance;
         private                 string                          _serviceName;
-        private                 bool                            _debuggerLogging;
+        private     readonly    bool                            _debuggerLogging;
         private                 bool                            _console;
         private                 bool                            _stopping;
         private                 bool                            _shutingdown;
@@ -46,12 +46,12 @@ namespace Jannesen.Service.ServiceProcess
         private                 StreamWriter                    _debugLogStreamWriter;
         private                 int                             _debugLogDay;
         private                 Timer                           _debugLogFlushTimer;
-        private                 object                          _debugLogFlushLock;
-        private                 object                          _logLock;
+        private     readonly    object                          _debugLogFlushLock;
+        private     readonly    object                          _logLock;
         private                 Delegate                        __serviceControlCallback;
         private                 IntPtr                          _statusHandle;
         private                 NativeMethods.SERVICE_STATUS    _serviceStatus;
-        private     static      object                          _lockErrorToString = new object();
+        private static readonly object                          _lockErrorToString = new object();
 
         public                  bool                            RuningOnConsole
         {
@@ -748,7 +748,6 @@ namespace Jannesen.Service.ServiceProcess
             streamWriter.Write("\t");
 
             int     b = 0;
-            int     e = logEntry.Message.Length;
             int     p;
 
             while ((p = logEntry.Message.IndexOf("\r\n", b, StringComparison.Ordinal)) >= 0) {

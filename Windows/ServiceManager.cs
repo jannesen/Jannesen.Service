@@ -38,7 +38,7 @@ namespace Jannesen.Service.Windows
 
     public class ServiceManager: ServiceHandle
     {
-        private             bool                            _fullAccess;
+        private readonly    bool                            _fullAccess;
 
         public                                              ServiceManager(string machineName = null, bool fullAccess = false)
         {
@@ -88,7 +88,7 @@ namespace Jannesen.Service.Windows
 
     public class Service: ServiceHandle
     {
-        private             string                          _serviceName;
+        private readonly    string                          _serviceName;
 
         public                                              Service(string serviceName, IntPtr handle)
         {
