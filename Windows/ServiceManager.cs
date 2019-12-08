@@ -132,15 +132,5 @@ namespace Jannesen.Service.Windows
                     throw NativeMethods.NewSystemError("Stop service '" + _serviceName + "' failed", err);
             }
         }
-
-        private             NativeMethods.SERVICE_STATUS    _queryServiceStatus()
-        {
-            NativeMethods.SERVICE_STATUS    service_status = new NativeMethods.SERVICE_STATUS();
-
-            if (!NativeMethods.QueryServiceStatus(_handle, ref service_status))
-                throw NativeMethods.NewSystemError("Query service status '" + _serviceName + "' failed");
-
-            return service_status;
-        }
     }
 }

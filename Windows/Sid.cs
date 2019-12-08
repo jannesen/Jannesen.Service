@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Jannesen.Service.Windows
 {
-    public  struct  Sid: IEquatable<Sid>
+    public struct  Sid: IEquatable<Sid>
     {
         private static  Sid                 _Null = new Sid();
 
@@ -32,18 +32,6 @@ namespace Jannesen.Service.Windows
         public static Sid                   ServerOperators                     { get { return new Sid(5,32,549); } }
         public static Sid                   PrintOperators                      { get { return new Sid(5,32,550); } }
         public static Sid                   BackupOperators                     { get { return new Sid(5,32,551); } }
-        public static Sid                   Administrator(Sid domain)           { return new Sid(5,domain,500); }
-        public static Sid                   Guest(Sid domain)                   { return new Sid(5,domain,501); }
-        public static Sid                   KRBTGT(Sid domain)                  { return new Sid(5,domain,502); }
-        public static Sid                   DomainAdmins(Sid domain)            { return new Sid(5,domain,512); }
-        public static Sid                   DomainUsers(Sid domain)             { return new Sid(5,domain,513); }
-        public static Sid                   DomainGuests(Sid domain)            { return new Sid(5,domain,514); }
-        public static Sid                   DomainComputers(Sid domain)         { return new Sid(5,domain,515); }
-        public static Sid                   DomainControllers(Sid domain)       { return new Sid(5,domain,516); }
-        public static Sid                   CertPublishers(Sid domain)          { return new Sid(5,domain,517); }
-        public static Sid                   SchemaAdmins(Sid domain)            { return new Sid(5,domain,518); }
-        public static Sid                   EnterpriseAdmins(Sid domain)        { return new Sid(5,domain,519); }
-        public static Sid                   RASandIASServers(Sid domain)        { return new Sid(5,domain,553); }
 
         public                              Sid(byte[] sid)
         {
@@ -87,10 +75,6 @@ namespace Jannesen.Service.Windows
             sid[13] = (byte)(SA2>> 8);
             sid[14] = (byte)(SA2>>16);
             sid[15] = (byte)(SA2>>24);
-        }
-        public                              Sid(UInt64 IA, Sid domain, UInt32 SA2)
-        {
-            throw new NotImplementedException("Not implemented Sid(UInt64 IA, Sid domain, UInt32 SA2)");
         }
         internal unsafe                     Sid(byte* sid)
         {
@@ -169,7 +153,7 @@ namespace Jannesen.Service.Windows
                     byte*       sid = stackalloc byte[(int)cbSid];
 
                     if (!NativeMethods.LookupAccountName(systemName, accountName, sid, &cbSid, DomainName, &cbDomainName, &Use))
-                        throw NativeMethods.NewSystemError("System call LookupAccountName(\""+(systemName!=null ? systemName : ".")+"\",\"" + accountName + "\") failed");
+                        throw NativeMethods.NewSystemError("System call LookupAccountName(\""+(systemName ?? ".")+"\",\"" + accountName + "\") failed");
 
                     return new Sid(sid);
                 }
@@ -289,14 +273,6 @@ namespace Jannesen.Service.Windows
         public override         int         GetHashCode()
         {
             return (sid!=null) ? sid.GetHashCode() : 0;
-        }
-
-        private                 char        _IntToHex(int i)
-        {
-            if (i<10)
-                return (char)('0'+i);
-            else
-                return (char)('A'+(i-10));
         }
     }
 }
