@@ -10,16 +10,7 @@ using Jannesen.Service.Windows;
 
 namespace Jannesen.Service.ServiceProcess
 {
-    public enum EventLogEntryType : short
-    {
-        Error           = 0x01,
-        Warning         = 0x02,
-        Information     = 0x04,
-        SuccessAudit    = 0x08,
-        FailureAudit    = 0x10
-    }
-
-    public abstract class ServiceBase: IDisposable
+    public abstract class ServiceBase: IServiceLogger, IDisposable
     {
         private struct LogEntry
         {

@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Interfaces.cs" />
     <Compile Include="ServiceProcess\Installer.cs" />
     <Compile Include="ServiceProcess\ServiceBase.cs" />
     <Compile Include="ServiceProcess\ServiceControl.cs" />
