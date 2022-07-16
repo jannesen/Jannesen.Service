@@ -7,6 +7,8 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using Jannesen.Service.Windows;
 
+#pragma warning disable CA1822 // CA1822: Mark members as static
+
 namespace Jannesen.Service.ServiceProcess
 {
     public enum InstallMode
@@ -15,7 +17,6 @@ namespace Jannesen.Service.ServiceProcess
         Uninstall
     }
 
-#pragma warning disable CA1822
     public class Installer
     {
         public              InstallMode     InstallMode             { get ; private set ; }
@@ -212,7 +213,7 @@ namespace Jannesen.Service.ServiceProcess
             }
             catch(Exception err) {
                 if (InstallMode == InstallMode.Install)
-                    throw err;
+                    throw;
                 else
                     DisplayError(err);
             }
@@ -303,7 +304,7 @@ namespace Jannesen.Service.ServiceProcess
             }
             catch(Exception err) {
                 if (InstallMode == InstallMode.Install)
-                    throw err;
+                    throw;
                 else
                     DisplayError(err);
             }

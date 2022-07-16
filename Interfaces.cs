@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Jannesen.Service.ServiceProcess
 {
+    [Flags]
     public enum EventLogEntryType : short
     {
         Error           = 0x01,

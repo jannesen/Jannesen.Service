@@ -5,28 +5,20 @@
     <OutputType>Library</OutputType>
     <TargetFramework>net48</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Jannesen.Service.snk</AssemblyOriginatorKeyFile>
     <Company>Jannesen B.V.</Company>
-    <Version>1.10.00.000</Version>
+    <Version>1.10.00.001</Version>
     <RepositoryUrl>https://github.com/jannesen/Jannesen.Service</RepositoryUrl>
     <Authors>Peter Jannesen</Authors>    
   </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <FileAlignment>512</FileAlignment>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
-  </PropertyGroup>
-  
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -36,6 +28,7 @@
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Debug</OutputPath>
@@ -50,8 +43,4 @@
     <Reference Include="System.DirectoryServices.AccountManagement" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="LICENSE.txt" />
-    <None Include="README.md" />
-  </ItemGroup>
 </Project>

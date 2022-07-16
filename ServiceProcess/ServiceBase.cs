@@ -254,9 +254,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         protected   virtual     void                            LogDataWriter(StreamWriter writer, object data)
         {
-#pragma warning disable CA1062 // Validate arguments of public methods
             writer.Write(data.ToString());
-#pragma warning restore CA1062
         }
         public      static      string                          GetAppSettings(string name)
         {
