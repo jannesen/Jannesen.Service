@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using Jannesen.Service.Settings;
 using Jannesen.Service.Windows;
 
 #pragma warning disable CA1822 // CA1822: Mark members as static
@@ -61,24 +62,12 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public              string          ProgramExe
-        {
-            get {
-                return System.Reflection.Assembly.GetEntryAssembly().Location;
-            }
-        }
-        public              string          ProgramDirectory
-        {
-            get {
-                return Path.GetDirectoryName(ProgramExe);
-            }
-        }
         public                              Installer(InstallMode installMode)
         {
             InstallMode        = installMode;
-            ServiceName        = ServiceBase.GetAppSettings("service-name");
-            ServiceDisplayName = ServiceBase.GetAppSettings("service-displayname",  ServiceName + " service");
-            AccountName        = ServiceBase.GetAppSettings("service-account-name", "LOCAL SERVICE");
+            ServiceName        = AppSettings.GetSetting("service-name");
+            ServiceDisplayName = AppSettings.GetSetting("service-displayname",  ServiceName + " service");
+            AccountName        = AppSettings.GetSetting("service-account-name", "LOCAL SERVICE");
         }
 
         public              void            Execute()
@@ -91,7 +80,7 @@ namespace Jannesen.Service.ServiceProcess
                 }
 
                 CreateEventSource();
-                ServiceControl.ServiceDefine(ServiceName, ServiceDisplayName, ProgramExe, AccountName, AccountPassword);
+                ServiceControl.ServiceDefine(ServiceName, ServiceDisplayName, AppSettings.ProgramExe, AccountName, AccountPassword);
                 SetStandardFileFolderRights();
                 SetLogDirectoryRights();
             }
@@ -176,12 +165,12 @@ namespace Jannesen.Service.ServiceProcess
         public              void            SetStandardFileFolderRights()
         {
             try {
-                SetAclDirectory(ProgramDirectory, FileSystemRights.ReadAndExecute);
+                SetAclDirectory(AppSettings.ProgramDirectory, FileSystemRights.ReadAndExecute);
 
-                string file = System.Configuration.ConfigurationManager.OpenExeConfiguration(ProgramExe).AppSettings.File;
+                string file = System.Configuration.ConfigurationManager.OpenExeConfiguration(AppSettings.ProgramExe).AppSettings.File;
 
                 if (!string.IsNullOrEmpty(file))
-                    SetAclFile(Path.Combine(ProgramDirectory, file), FileSystemRights.ReadAndExecute);
+                    SetAclFile(Path.Combine(AppSettings.ProgramDirectory, file), FileSystemRights.ReadAndExecute);
             }
             catch(Exception err) {
                 err = new InstallerException("SetStandardFileFolderRights failed.", err);
@@ -195,8 +184,8 @@ namespace Jannesen.Service.ServiceProcess
         public              void            SetLogDirectoryRights()
         {
             try {
-                if (ServiceBase.GetAppSettings("service-debuglog", "0") == "1") {
-                    string logDirectory = ServiceBase.GetAppSettings("logdirectory") + @"\" + ServiceName;
+                if (AppSettings.GetSetting("service-debuglog", "0") == "1") {
+                    string logDirectory = AppSettings.GetSetting("logdirectory") + @"\" + ServiceName;
 
                     if (InstallMode == InstallMode.Install) {
                         try {
@@ -296,10 +285,10 @@ namespace Jannesen.Service.ServiceProcess
         public              void            DatabaseLoginUser()
         {
             try {
-                string role = ServiceBase.GetAppSettings("service-database-role", null);
+                string role = AppSettings.GetSetting("service-database-role", null);
 
                 if (role != null) {
-                    DatabaseLoginUser(ServiceBase.GetAppSettings("database-server"), ServiceBase.GetAppSettings("database-name"), role);
+                    DatabaseLoginUser(AppSettings.GetSetting("database-server"), AppSettings.GetSetting("database-name"), role);
                 }
             }
             catch(Exception err) {
@@ -390,7 +379,7 @@ namespace Jannesen.Service.ServiceProcess
         public              void            FirewallRemoveRules()
         {
             try {
-                PowerShell("$program = \"" + ProgramExe + "\"\r\n"  +
+                PowerShell("$program = \"" + AppSettings.ProgramExe + "\"\r\n"  +
                             "foreach ($rule in @(Get-NetFirewallRule -All)) {\r\n" +
                             "    if (@(Get-NetFirewallApplicationFilter -AssociatedNetFirewallRule $rule).Where({($_.Program -eq $program)})) {\r\n" +
                             "        Write-Output (\"# drop firewall rule: \" + $rule.DisplayName)\r\n" +
@@ -416,7 +405,7 @@ namespace Jannesen.Service.ServiceProcess
 
             try {
                 Console.WriteLine("# add firewall rule: " + name);
-                PowerShell("$dummy=New-NetFirewallRule -DisplayName \"" + name + "\" -Direction Inbound -Enabled true -Protocol " + protocol + " -LocalPort " + port + " -Action Allow -Program \"" + ProgramExe + "\"");
+                PowerShell("$dummy=New-NetFirewallRule -DisplayName \"" + name + "\" -Direction Inbound -Enabled true -Protocol " + protocol + " -LocalPort " + port + " -Action Allow -Program \"" + AppSettings.ProgramExe + "\"");
             }
             catch(Exception err) {
                 err = new InstallerException("FirewallAddRule('" + name + "') failed.", err);

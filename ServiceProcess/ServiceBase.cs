@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Jannesen.Service.Windows;
+using Jannesen.Service.Settings;
 
 namespace Jannesen.Service.ServiceProcess
 {
@@ -159,7 +160,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             lock(_debugLogFlushLock) {
                 if (enable) {
-                    _debugLogDirectory = GetAppSettings("logdirectory") + @"\" + _serviceName;
+                    _debugLogDirectory = AppSettings.GetSetting("logdirectory") + @"\" + _serviceName;
                     if (!Directory.Exists(_debugLogDirectory))
                         Directory.CreateDirectory(_debugLogDirectory);
 
@@ -256,24 +257,6 @@ namespace Jannesen.Service.ServiceProcess
         {
             writer.Write(data.ToString());
         }
-        public      static      string                          GetAppSettings(string name)
-        {
-            string  s = ConfigurationManager.AppSettings[name];
-
-            if (s == null)
-                throw new Exception("Missing appSetting '" + name + "'.");
-
-            return s;
-        }
-        public      static      string                          GetAppSettings(string name, string defaultValue)
-        {
-            string  s = ConfigurationManager.AppSettings[name];
-
-            if (s == null)
-                return defaultValue;
-
-            return s;
-        }
 
         public                  int                             Run(string[] args)
         {
@@ -281,7 +264,7 @@ namespace Jannesen.Service.ServiceProcess
                 if (args is null) throw new ArgumentNullException(nameof(args));
 
                 _console     = _hasConsole();
-                _serviceName = GetAppSettings("service-name");
+                _serviceName = AppSettings.GetSetting("service-name");
 
                 if (args.Length>0) {
                     switch(args[0]) {
@@ -584,7 +567,7 @@ namespace Jannesen.Service.ServiceProcess
                 }
 
                 try {
-                    if (GetAppSettings("service-debuglog", "0") == "1")
+                    if (AppSettings.GetSetting("service-debuglog", "0") == "1")
                         EnableDebugLog(true);
 
                     ServiceMain();
