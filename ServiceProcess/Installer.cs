@@ -62,8 +62,13 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
+
         public                              Installer(InstallMode installMode)
         {
+            if (!(new WindowsPrincipal(WindowsIdentity.GetCurrent())) .IsInRole(WindowsBuiltInRole.Administrator)) {
+                throw new System.Security.SecurityException("No administrator rights.");
+            }
+
             InstallMode        = installMode;
             ServiceName        = AppSettings.GetSetting("service-name");
             ServiceDisplayName = AppSettings.GetSetting("service-displayname",  ServiceName + " service");
