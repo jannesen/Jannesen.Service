@@ -20,13 +20,13 @@ namespace Jannesen.Service.ServiceProcess
 
     public class Installer
     {
-        public              InstallMode     InstallMode             { get ; private set ; }
-        public              string          ServiceName             { get ; private set ; }
-        public              string          ServiceDisplayName      { get ; private set ; }
-        public              string          AccountName             { get ; private set ; }
-        public              string          AccountPassword         { get ; private set ; }
+        public              InstallMode         InstallMode             { get ; private set ; }
+        public              string              ServiceName             { get ; private set ; }
+        public              string              ServiceDisplayName      { get ; private set ; }
+        public              string              AccountName             { get ; private set ; }
+        public              string              AccountPassword         { get ; private set ; }
 
-        public              string          AccountFullName
+        public              string              AccountFullName
         {
             get {
                 if (AccountName.IndexOf('\\') > 0)
@@ -41,13 +41,18 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public              NTAccount       AccountIdentity
+        public              SecurityIdentifier  AccountSecurityIdentifier
         {
             get {
-                return new NTAccount(AccountFullName);
+                try { 
+                    return (new NTAccount(AccountFullName)).Translate(typeof(SecurityIdentifier)) as SecurityIdentifier;
+                }
+                catch(IdentityNotMappedException) {
+                    return null;
+                }
             }
         }
-        public              bool            predefinedAccount
+        public              bool                predefinedAccount
         {
             get {
                 switch(AccountName.ToUpperInvariant()) {
@@ -63,7 +68,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        public                              Installer(InstallMode installMode)
+        public                                  Installer(InstallMode installMode)
         {
             if (!(new WindowsPrincipal(WindowsIdentity.GetCurrent())) .IsInRole(WindowsBuiltInRole.Administrator)) {
                 throw new System.Security.SecurityException("No administrator rights.");
@@ -75,7 +80,7 @@ namespace Jannesen.Service.ServiceProcess
             AccountName        = AppSettings.GetSetting("service-account-name", "LOCAL SERVICE");
         }
 
-        public              void            Execute()
+        public              void                Execute()
         {
             if (InstallMode == InstallMode.Install) {
                 InstallMode = InstallMode.Install;
@@ -95,7 +100,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        public              void            ReadPassword()
+        public              void                ReadPassword()
         {
             for (;;) {
                 Console.Write("Password for " + AccountName + ": ");
@@ -108,7 +113,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        public              void            CreateEventSource()
+        public              void                CreateEventSource()
         {
             try {
                 Console.WriteLine("# Create event source: " + ServiceName);
@@ -117,16 +122,11 @@ namespace Jannesen.Service.ServiceProcess
                     System.Diagnostics.EventLog.CreateEventSource(ServiceName, ServiceBase.EventLogName);
             }
             catch(Exception err) {
-                err = new InstallerException("CreateEventSource('" + ServiceName + "') failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("CreateEventSource('" + ServiceName + "') failed.", err));
             }
         }
 
-        public              void            AccountLSASetServiceLogonRigh()
+        public              void                AccountLSASetServiceLogonRigh()
         {
             try {
                 Console.WriteLine("# Set lsa policies SeServiceLogonRight on user: " + AccountName);
@@ -135,15 +135,10 @@ namespace Jannesen.Service.ServiceProcess
                     lsaPolicy.Set(AccountName, "SeServiceLogonRight");
             }
             catch(Exception err) {
-                err = new InstallerException("AccountLSASetServiceLogonRigh('" + AccountName + "') failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("AccountLSASetServiceLogonRigh('" + AccountName + "') failed.", err));
             }
         }
-        public              void            AccountLSAResetAll()
+        public              void                AccountLSAResetAll()
         {
             try {
                 Console.WriteLine("# remove lsa policies from user: " + AccountName);
@@ -158,16 +153,11 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
             catch(Exception err) {
-                err = new InstallerException("AccountLSAResetAll('" + AccountName + "') failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("AccountLSAResetAll('" + AccountName + "') failed.", err));
             }
         }
 
-        public              void            SetStandardFileFolderRights()
+        public              void                SetStandardFileFolderRights()
         {
             try {
                 SetAclDirectory(AppSettings.ProgramDirectory, FileSystemRights.ReadAndExecute);
@@ -178,15 +168,10 @@ namespace Jannesen.Service.ServiceProcess
                     SetAclFile(Path.Combine(AppSettings.ProgramDirectory, file), FileSystemRights.ReadAndExecute);
             }
             catch(Exception err) {
-                err = new InstallerException("SetStandardFileFolderRights failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("SetStandardFileFolderRights failed.", err));
             }
         }
-        public              void            SetLogDirectoryRights()
+        public              void                SetLogDirectoryRights()
         {
             try {
                 if (AppSettings.GetSetting("service-debuglog", "0") == "1") {
@@ -206,88 +191,88 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
             catch(Exception err) {
-                if (InstallMode == InstallMode.Install)
-                    throw;
-                else
-                    DisplayError(err);
+                Error(err);
             }
         }
-        public              void            SetAclDirectory(string path, FileSystemRights rights)
+        public              void                SetAclDirectory(string path, FileSystemRights rights)
         {
-            if (path is null) throw new ArgumentNullException(nameof(path));
-
-            try {
-                Console.WriteLine((InstallMode == InstallMode.Install ? "# set acl on directory: " : "# remove acl on directory: ") + path);
-
-                if (InstallMode == InstallMode.Install) {
-                    CreatePath(path);
-
-                    DirectorySecurity   acl  = Directory.GetAccessControl(path);
-                    acl.SetAccessRule(new FileSystemAccessRule(AccountIdentity,
-                                                               rights,
-                                                               InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
-                                                               PropagationFlags.None,
-                                                               AccessControlType.Allow));
-                    Directory.SetAccessControl(path, acl);
-                }
-                else {
-                    if (Directory.Exists(path)) {
-                        DirectorySecurity   acl  = Directory.GetAccessControl(path);
-                        acl.PurgeAccessRules(AccountIdentity);
-                        Directory.SetAccessControl(path, acl);
-                    }
-                }
-            }
-            catch(Exception err) {
-                if (err is DirectoryNotFoundException)
-                    err = new DirectoryNotFoundException("Directory not found.");
-
-                err = new InstallerException((InstallMode == InstallMode.Install ? "SetAclDirectory('" + path + "') failed." : "RemoveAclDirectory('" + path + "') failed."), err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
-            }
-        }
-        public              void            SetAclFile(string path, FileSystemRights rights)
-        {
-            if (path is null) throw new ArgumentNullException(nameof(path));
-
-            try {
-                Console.WriteLine((InstallMode == InstallMode.Install ? "# set acl on file: " : "# remove acl on file: ") + path);
-
-                if (InstallMode == InstallMode.Install || File.Exists(path)) {
-                    FileSecurity        acl = File.GetAccessControl(path);
+            if (path != null) {
+                try {
+                    var si = AccountSecurityIdentifier;
 
                     if (InstallMode == InstallMode.Install) {
-                        acl.SetAccessRule(new FileSystemAccessRule(AccountIdentity,
+                        Console.WriteLine("# set acl on directory: " + path);
+                        if (si == null) {
+                            throw new IdentityNotMappedException("Can't map '" + AccountFullName + "' to SecurityIdentifier.");
+                        }
+
+                        CreatePath(path);
+
+                        var     acl  = Directory.GetAccessControl(path);
+                        acl.SetAccessRule(new FileSystemAccessRule(si,
+                                                                   rights,
+                                                                   InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                                                                   PropagationFlags.None,
+                                                                   AccessControlType.Allow));
+                        Directory.SetAccessControl(path, acl);
+                    }
+                    else {
+                        if (si != null && Directory.Exists(path)) {
+                            Console.WriteLine("# remove acl on directory: " + path);
+                            var   acl  = Directory.GetAccessControl(path);
+                            acl.PurgeAccessRules(si);
+                            Directory.SetAccessControl(path, acl);
+                        }
+                    }
+                }
+                catch(Exception err) {
+                    if (err is DirectoryNotFoundException)
+                        err = new DirectoryNotFoundException("Directory not found.");
+
+                    Error(new InstallerException((InstallMode == InstallMode.Install ? "SetAclDirectory('" + path + "') failed." : "RemoveAclDirectory('" + path + "') failed."), err));
+                }
+            }
+        }
+        public              void                SetAclFile(string path, FileSystemRights rights)
+        {
+            if (path != null) {
+                try {
+                    var si = AccountSecurityIdentifier;
+
+
+                    if (InstallMode == InstallMode.Install) {
+                        Console.WriteLine("# set acl on file: " + path);
+                        var acl = File.GetAccessControl(path);
+                        if (si == null) {
+                            throw new IdentityNotMappedException("Can't map '" + AccountFullName + "' to SecurityIdentifier.");
+                        }
+
+                        acl.SetAccessRule(new FileSystemAccessRule(si,
                                                                     rights,
                                                                     InheritanceFlags.None,
                                                                     PropagationFlags.None,
                                                                     AccessControlType.Allow));
+                        File.SetAccessControl(path, acl);
                     }
                     else {
-                        acl.PurgeAccessRules(AccountIdentity);
+                        if (si != null && File.Exists(path)) { 
+                            Console.WriteLine("# remove acl on file: " + path);
+                            var acl = File.GetAccessControl(path);
+                            acl.PurgeAccessRules(si);
+                            File.SetAccessControl(path, acl);
+                        }
                     }
-
-                    File.SetAccessControl(path, acl);
                 }
-            }
-            catch(Exception err) {
-                if (err is FileNotFoundException)
-                    err = new FileNotFoundException("File not found.");
+                catch(Exception err) {
+                    if (err is FileNotFoundException)
+                        err = new FileNotFoundException("File not found.");
 
-                err = new InstallerException((InstallMode == InstallMode.Install ? "SetAclFile('" + path + "') failed." : "RemoveAclFile('" + path + "') failed."), err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                    Error(new InstallerException((InstallMode == InstallMode.Install ? "SetAclFile('" + path + "') failed." : "RemoveAclFile('" + path + "') failed."), err));
+                }
             }
         }
 
-        public              void            DatabaseLoginUser()
+        public              void                DatabaseLoginUser()
         {
             try {
                 string role = AppSettings.GetSetting("service-database-role", null);
@@ -297,13 +282,10 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
             catch(Exception err) {
-                if (InstallMode == InstallMode.Install)
-                    throw;
-                else
-                    DisplayError(err);
+                Error(err);
             }
         }
-        public              void            DatabaseLoginUser(string server, string database, string role)
+        public              void                DatabaseLoginUser(string server, string database, string role)
         {
             if (server is null) throw new ArgumentNullException(nameof(server));
             if (database is null) throw new ArgumentNullException(nameof(database));
@@ -352,16 +334,11 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
             catch(Exception err) {
-                err = new InstallerException("DatabaseLoginUser('" + role  + "') failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("DatabaseLoginUser('" + role  + "') failed.", err));
             }
         }
 
-        public              void            HttpUrlAcl(string binding)
+        public              void                HttpUrlAcl(string binding)
         {
             if (binding is null) throw new ArgumentNullException(nameof(binding));
 
@@ -372,16 +349,11 @@ namespace Jannesen.Service.ServiceProcess
                     Exec("netsh", "http add urlacl url=" + binding + " user=\"" + AccountFullName + "\"");
             }
             catch(Exception err) {
-                err = new InstallerException("HttpUrlAcl('" + binding + "') failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("HttpUrlAcl('" + binding + "') failed.", err));
             }
         }
 
-        public              void            FirewallRemoveRules()
+        public              void                FirewallRemoveRules()
         {
             try {
                 PowerShell("$program = \"" + AppSettings.ProgramExe + "\"\r\n"  +
@@ -393,16 +365,11 @@ namespace Jannesen.Service.ServiceProcess
                             "}");
             }
             catch(Exception err) {
-                err = new InstallerException("FirewallRemoveRules failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("FirewallRemoveRules failed.", err));
             }
         }
 
-        public              void            FirewallAddRule(string name, string protocol, string port)
+        public              void                FirewallAddRule(string name, string protocol, string port)
         {
             if (name is null) throw new ArgumentNullException(nameof(name));
             if (protocol is null) throw new ArgumentNullException(nameof(protocol));
@@ -413,16 +380,11 @@ namespace Jannesen.Service.ServiceProcess
                 PowerShell("$dummy=New-NetFirewallRule -DisplayName \"" + name + "\" -Direction Inbound -Enabled true -Protocol " + protocol + " -LocalPort " + port + " -Action Allow -Program \"" + AppSettings.ProgramExe + "\"");
             }
             catch(Exception err) {
-                err = new InstallerException("FirewallAddRule('" + name + "') failed.", err);
-
-                if (InstallMode == InstallMode.Install)
-                    throw err;
-                else
-                    DisplayError(err);
+                Error(new InstallerException("FirewallAddRule('" + name + "') failed.", err));
             }
         }
 
-        public              void            Exec(string filename, string arguments, bool redirectOutput=false)
+        public              void                Exec(string filename, string arguments, bool redirectOutput=false)
         {
             if (filename is null) throw new ArgumentNullException(nameof(filename));
             if (arguments is null) throw new ArgumentNullException(nameof(arguments));
@@ -443,7 +405,7 @@ namespace Jannesen.Service.ServiceProcess
                 proc.WaitForExit();
             }
         }
-        public              void            PowerShell(string cmd)
+        public              void                PowerShell(string cmd)
         {
             if (cmd is null) throw new ArgumentNullException(nameof(cmd));
 
@@ -459,7 +421,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        public              void            CreatePath(string path)
+        public              void                CreatePath(string path)
         {
             if (path is null) throw new ArgumentNullException(nameof(path));
 
@@ -471,7 +433,7 @@ namespace Jannesen.Service.ServiceProcess
             }
         }
 
-        public              bool            validatePassword()
+        public              bool                validatePassword()
         {
             string              domainName;
             string              userName;
@@ -490,7 +452,14 @@ namespace Jannesen.Service.ServiceProcess
                 return pc.ValidateCredentials(userName, AccountPassword);
         }
 
-        public              void            DisplayError(Exception err)
+        public              void                Error(Exception err)
+        {
+            if (InstallMode == InstallMode.Install)
+                throw err;
+            else
+                DisplayError(err);
+        }
+        public              void                DisplayError(Exception err)
         {
             Console.Write("ERROR:");
             while (err != null) {
