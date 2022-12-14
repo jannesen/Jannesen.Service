@@ -7,7 +7,7 @@ namespace Jannesen.Service.Windows
     /// <summary>
     /// Summary description for WinApi.
     /// </summary>
-    class NativeMethods
+    sealed class NativeMethods
     {
         [DllImport("kernel32", CharSet=CharSet.Unicode, SetLastError=true)]
         internal static extern          IntPtr  GetStdHandle(UInt32 StdHandle);

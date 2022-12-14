@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Jannesen.Service.Windows
 {
-    class LsaPolicy : IDisposable
+    sealed class LsaPolicy : IDisposable
     {
         private IntPtr      _policyHandle = IntPtr.Zero;
 
@@ -32,7 +32,7 @@ namespace Jannesen.Service.Windows
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        protected virtual   void        Dispose(bool disposing)
+        private             void        Dispose(bool disposing)
         {
             if (_policyHandle!=IntPtr.Zero) {
                 NativeMethods.LsaClose(_policyHandle);
