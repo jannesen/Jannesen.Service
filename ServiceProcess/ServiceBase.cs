@@ -8,6 +8,8 @@ using System.Threading;
 using Jannesen.Service.Windows;
 using Jannesen.Service.Settings;
 
+#pragma warning disable CA2213 // Disposable fields should be disposed
+
 namespace Jannesen.Service.ServiceProcess
 {
     public abstract class ServiceBase: IServiceLogger, IDisposable
@@ -82,8 +84,9 @@ namespace Jannesen.Service.ServiceProcess
         protected   virtual     void                            Dispose(Boolean disposing)
         {
             if (disposing) {
-                lock(_debugLogFlushLock)
+                lock(_debugLogFlushLock) {
                     _debugLogStop();
+                }
 
                 if (_eventLog != null)              _eventLog.Dispose();
             }

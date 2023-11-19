@@ -9,6 +9,7 @@ using Jannesen.Service.Settings;
 using Jannesen.Service.Windows;
 
 #pragma warning disable CA1822 // CA1822: Mark members as static
+#pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
 
 namespace Jannesen.Service.ServiceProcess
 {
