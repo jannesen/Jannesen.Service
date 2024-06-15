@@ -39,21 +39,21 @@ namespace Jannesen.Service.Windows
         [DllImport("advapi32.dll")]
         internal static unsafe extern   UInt32  LsaNtStatusToWinError(UInt32 Status);
         [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
-        internal static unsafe extern   bool    LookupAccountSid(string SystemName,byte* pSid,System.Text.StringBuilder Name,UInt32* pcbName,System.Text.StringBuilder DomainName,UInt32* pcbDomainName,SidNameUse* pUse);
+        internal static unsafe extern   bool    LookupAccountSid(string? SystemName,byte* pSid,System.Text.StringBuilder Name,UInt32* pcbName,System.Text.StringBuilder DomainName,UInt32* pcbDomainName,SidNameUse* pUse);
         [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
-        internal static unsafe extern   bool    LookupAccountName(string SystemName,string AccountName,byte* pSid,UInt32* pcbSid,System.Text.StringBuilder DomainName,UInt32* pcbDomainName,SidNameUse* pUse);
+        internal static unsafe extern   bool    LookupAccountName(string? SystemName,string AccountName,byte* pSid,UInt32* pcbSid,System.Text.StringBuilder DomainName,UInt32* pcbDomainName,SidNameUse* pUse);
         [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
-        internal static extern          IntPtr  OpenSCManager(string machineName, string databaseName, UInt32 access);
+        internal static extern          IntPtr  OpenSCManager(string? machineName, string? databaseName, UInt32 access);
         [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
         internal static extern          IntPtr  OpenService(IntPtr databaseHandle, string serviceName, UInt32 access);
         [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
-        internal static extern          IntPtr  CreateService(IntPtr databaseHandle, string serviceName, string displayName, UInt32 access, UInt32 serviceType, UInt32 startType, UInt32 errorControl, string binaryPath, string loadOrderGroup, IntPtr pTagId, string dependencies, string servicesStartName, string password);
+        internal static extern          IntPtr  CreateService(IntPtr databaseHandle, string serviceName, string displayName, UInt32 access, UInt32 serviceType, UInt32 startType, UInt32 errorControl, string? binaryPath, string? loadOrderGroup, IntPtr pTagId, string? dependencies, string? servicesStartName, string? password);
         [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
         internal static extern          bool    DeleteService(IntPtr serviceHandle);
         [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
-        internal static extern          bool    ChangeServiceConfig(IntPtr hService, UInt32 nServiceType, UInt32 nStartType, UInt32 nErrorControl, string lpBinaryPathName, string lpLoadOrderGroup, IntPtr lpdwTagId, string lpDependencies, string lpServiceStartName, string lpPassword, string lpDisplayName);
+        internal static extern          bool    ChangeServiceConfig(IntPtr hService, UInt32 nServiceType, UInt32 nStartType, UInt32 nErrorControl, string? lpBinaryPathName, string? lpLoadOrderGroup, IntPtr lpdwTagId, string? lpDependencies, string? lpServiceStartName, string? lpPassword, string? lpDisplayName);
         [DllImport("advapi32", CharSet=CharSet.Unicode, SetLastError=true)]
-        internal static extern          bool    StartService(IntPtr hService, int dwNumServiceArgs, string[] lpServiceArgVectors);
+        internal static extern          bool    StartService(IntPtr hService, int dwNumServiceArgs, string[]? lpServiceArgVectors);
         [DllImport("advapi32", CharSet=CharSet.Unicode, SetLastError=true)]
         internal static extern          bool    ControlService(IntPtr hService, SERVICE_CONTROL dwControl, ref SERVICE_STATUS lpServiceStatus);
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError=true)]

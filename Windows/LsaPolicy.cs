@@ -25,14 +25,14 @@ namespace Jannesen.Service.Windows
         }
                                         ~LsaPolicy()
         {
-                    Dispose(false);
+                    _dispose();
         }
         public              void        Dispose()
         {
-            Dispose(true);
+            _dispose();
             GC.SuppressFinalize(this);
         }
-        private             void        Dispose(bool disposing)
+        private             void        _dispose()
         {
             if (_policyHandle!=IntPtr.Zero) {
                 NativeMethods.LsaClose(_policyHandle);

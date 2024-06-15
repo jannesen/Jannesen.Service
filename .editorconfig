@@ -8,14 +8,29 @@ indent_size = 4
 trim_trailing_whitespace = true
 
 [*.cs]
+# IDE0057: Use range operator
+dotnet_diagnostic.IDE0057.severity = none
+
+# IDE0066: Use switch expression
+dotnet_diagnostic.IDE0066.severity = none
+
+# IDE0090: Simplify 'new' expression
+dotnet_diagnostic.IDE0090.severity = none
+
+# Member can be made 'readonly'
+dotnet_diagnostic.IDE0251.severity = none
+
+# Use primary constructor
+dotnet_diagnostic.IDE0290.severity = none
+
 # IDE1006: Naming Styles
 dotnet_diagnostic.IDE1006.severity = none
 
 # CA1014: Mark assemblies with CLSCompliant
-dotnet_diagnostic.CA1014.severity = none
+#dotnet_diagnostic.CA1014.severity = none
 
 # CA1008: Enums should have zero value
-dotnet_diagnostic.CA1008.severity = none
+#dotnet_diagnostic.CA1008.severity = none
 
 # CA1028: Enum Storage should be Int32
 dotnet_diagnostic.CA1028.severity = none
@@ -44,9 +59,6 @@ dotnet_diagnostic.CA1724.severity = none
 # CA1725: Parameter names should match base declaration
 dotnet_diagnostic.CA1725.severity = none
 
-# CA1805: Member '_Null' is explicitly initialized to its default value
-dotnet_diagnostic.CA1805.severity = none
-
 # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1806.severity = none
 
@@ -61,3 +73,6 @@ dotnet_diagnostic.CA2201.severity = none
 
 # CA5392: The method LsaNtStatusToWinError didn't use DefaultDllImportSearchPaths attribute for P/Invokes.
 dotnet_diagnostic.CA5392.severity = none
+
+# SYSLIB1054
+dotnet_diagnostic.SYSLIB1054.severity = none

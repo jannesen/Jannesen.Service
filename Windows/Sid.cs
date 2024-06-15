@@ -5,35 +5,35 @@ namespace Jannesen.Service.Windows
 {
     public struct  Sid: IEquatable<Sid>
     {
-        private static  Sid                 _Null = new Sid();
+        private static  Sid                 _Null = new Sid((byte[]?)null);
 
-        public      byte[]                  sid;
+        public readonly byte[]?             sid;
 
-        public static Sid                   Nobody                              { get { return new Sid(0,0); } }
-        public static Sid                   Everyone                            { get { return new Sid(1,0); } }
-        public static Sid                   CreatorOwner                        { get { return new Sid(3,0); } }
-        public static Sid                   CreatorGroup                        { get { return new Sid(3,1); } }
-        public static Sid                   Dialup                              { get { return new Sid(5,1); } }
-        public static Sid                   Network                             { get { return new Sid(5,2); } }
-        public static Sid                   Batch                               { get { return new Sid(5,3); } }
-        public static Sid                   Interactive                         { get { return new Sid(5,4); } }
-        public static Sid                   Service                             { get { return new Sid(5,6); } }
-        public static Sid                   Anonymous                           { get { return new Sid(5,7); } }
-        public static Sid                   EnterpriseControllers               { get { return new Sid(5,9); } }
-        public static Sid                   PrincipalSelf                       { get { return new Sid(5,10); } }
-        public static Sid                   AuthenticatedUsers                  { get { return new Sid(5,11); } }
-        public static Sid                   TerminalServerUsers                 { get { return new Sid(5,13); } }
-        public static Sid                   LocalSystem                         { get { return new Sid(5,18); } }
-        public static Sid                   Administrators                      { get { return new Sid(5,32,544); } }
-        public static Sid                   Users                               { get { return new Sid(5,32,545); } }
-        public static Sid                   Guests                              { get { return new Sid(5,32,546); } }
-        public static Sid                   PowerUsers                          { get { return new Sid(5,32,547); } }
-        public static Sid                   AccountOperators                    { get { return new Sid(5,32,548); } }
-        public static Sid                   ServerOperators                     { get { return new Sid(5,32,549); } }
-        public static Sid                   PrintOperators                      { get { return new Sid(5,32,550); } }
-        public static Sid                   BackupOperators                     { get { return new Sid(5,32,551); } }
+        public static   Sid                 Nobody                              { get { return new Sid(0,0); } }
+        public static   Sid                 Everyone                            { get { return new Sid(1,0); } }
+        public static   Sid                 CreatorOwner                        { get { return new Sid(3,0); } }
+        public static   Sid                 CreatorGroup                        { get { return new Sid(3,1); } }
+        public static   Sid                 Dialup                              { get { return new Sid(5,1); } }
+        public static   Sid                 Network                             { get { return new Sid(5,2); } }
+        public static   Sid                 Batch                               { get { return new Sid(5,3); } }
+        public static   Sid                 Interactive                         { get { return new Sid(5,4); } }
+        public static   Sid                 Service                             { get { return new Sid(5,6); } }
+        public static   Sid                 Anonymous                           { get { return new Sid(5,7); } }
+        public static   Sid                 EnterpriseControllers               { get { return new Sid(5,9); } }
+        public static   Sid                 PrincipalSelf                       { get { return new Sid(5,10); } }
+        public static   Sid                 AuthenticatedUsers                  { get { return new Sid(5,11); } }
+        public static   Sid                 TerminalServerUsers                 { get { return new Sid(5,13); } }
+        public static   Sid                 LocalSystem                         { get { return new Sid(5,18); } }
+        public static   Sid                 Administrators                      { get { return new Sid(5,32,544); } }
+        public static   Sid                 Users                               { get { return new Sid(5,32,545); } }
+        public static   Sid                 Guests                              { get { return new Sid(5,32,546); } }
+        public static   Sid                 PowerUsers                          { get { return new Sid(5,32,547); } }
+        public static   Sid                 AccountOperators                    { get { return new Sid(5,32,548); } }
+        public static   Sid                 ServerOperators                     { get { return new Sid(5,32,549); } }
+        public static   Sid                 PrintOperators                      { get { return new Sid(5,32,550); } }
+        public static   Sid                 BackupOperators                     { get { return new Sid(5,32,551); } }
 
-        public                              Sid(byte[] sid)
+        public                              Sid(byte[]? sid)
         {
             this.sid = sid;
         }
@@ -102,21 +102,21 @@ namespace Jannesen.Service.Windows
 
         public static           Sid         AccountSid(string accountName)
        {
-            if (accountName is null) throw new ArgumentNullException(nameof(accountName));
+            ArgumentNullException.ThrowIfNull(accountName);
 
-            if (accountName.IndexOf('\\') < 0)
+            if (accountName.IndexOf('\\', StringComparison.Ordinal) < 0)
                 return AccountSid(null, accountName);
 
             using (System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry("WinNT://" + accountName.Replace('\\', '/'))) {
                 if (entry.Properties["objectSid"].Count == 0)
                     throw new Exception("Unknown domain/username '" + accountName + "'.");
 
-                return new Sid((byte[])entry.Properties["objectSid"].Value);
+                return new Sid((byte[])entry.Properties["objectSid"].Value!);
             }
         }
-        public static unsafe    Sid         AccountSid(string systemName, string accountName)
+        public static unsafe    Sid         AccountSid(string? systemName, string accountName)
         {
-            if (accountName is null) throw new ArgumentNullException(nameof(accountName));
+            ArgumentNullException.ThrowIfNull(accountName);
 
             switch(accountName) {
             case "Nobody":                  return Nobody;
@@ -168,6 +168,7 @@ namespace Jannesen.Service.Windows
 
         public                  IntPtr      AllocHGlobal()
         {
+            if (sid == null) throw new InvalidOperationException("sid == null");
             IntPtr ptr = Marshal.AllocHGlobal(96);
             Marshal.Copy(sid, 0, ptr, sid.Length);
             return ptr;
@@ -177,7 +178,7 @@ namespace Jannesen.Service.Windows
         {
             return AccountName(null);
         }
-        public unsafe           string      AccountName(string systemName)
+        public unsafe           string      AccountName(string? systemName)
         {
             if (sid!=null) {
                 System.Text.StringBuilder   Name         = new System.Text.StringBuilder(256);
@@ -208,33 +209,37 @@ namespace Jannesen.Service.Windows
 
         public override         string      ToString()
         {
-            System.Text.StringBuilder   rtn = new System.Text.StringBuilder(128);
-
-            rtn.Append('S');
-            rtn.Append('-');
-            rtn.Append(sid[0]);
-            rtn.Append('-');
-
-            rtn.Append( (((UInt64)( (((UInt32)sid[2])<<8)
-                                    |((UInt32)sid[3])
-                                  )) <<32
-                         ) |
-                        (UInt64)( (((UInt32)sid[4])<<24)
-                                 |(((UInt32)sid[5])<<16)
-                                 |(((UInt32)sid[6])<<8)
-                                  |((UInt32)sid[7])
-                                )
-                      );
-
-            for (int i = 8 ; i < sid.Length ; i+=4) {
+            if (sid != null) {
+                var  rtn = new System.Text.StringBuilder(128);
+                rtn.Append('S');
                 rtn.Append('-');
-                rtn.Append( (((UInt32)sid[i+3])<<24)
-                           |(((UInt32)sid[i+2])<<16)
-                           |(((UInt32)sid[i+1])<<8)
-                           | ((UInt32)sid[i+0]));
-            }
+                rtn.Append(sid[0]);
+                rtn.Append('-');
 
-            return rtn.ToString();
+                rtn.Append( (((UInt64)( (((UInt32)sid[2])<<8)
+                                        |((UInt32)sid[3])
+                                      )) <<32
+                             ) |
+                            (UInt64)( (((UInt32)sid[4])<<24)
+                                     |(((UInt32)sid[5])<<16)
+                                     |(((UInt32)sid[6])<<8)
+                                      |((UInt32)sid[7])
+                                    )
+                          );
+
+                for (int i = 8 ; i < sid.Length ; i+=4) {
+                    rtn.Append('-');
+                    rtn.Append( (((UInt32)sid[i+3])<<24)
+                               |(((UInt32)sid[i+2])<<16)
+                               |(((UInt32)sid[i+1])<<8)
+                               | ((UInt32)sid[i+0]));
+                }
+
+                return rtn.ToString();
+            }
+            else {
+                return "S-NULL";
+            }
         }
 
         public static           bool        operator==(Sid sid1,Sid sid2)
@@ -259,12 +264,9 @@ namespace Jannesen.Service.Windows
         {
             return !(sid1==sid2);
         }
-        public override         bool        Equals(object o)
+        public override         bool        Equals(object? o)
         {
-            if (o is Sid)
-                return this==(Sid)o;
-
-            return false;
+            return (o is Sid s && this == s);
         }
         public                  bool        Equals(Sid o)
         {

@@ -40,7 +40,7 @@ namespace Jannesen.Service.Windows
     {
         private readonly    bool                            _fullAccess;
 
-        public                                              ServiceManager(string machineName = null, bool fullAccess = false)
+        public                                              ServiceManager(string? machineName = null, bool fullAccess = false)
         {
             IntPtr  handle;
             UInt32  dr = fullAccess ? (NativeMethods.SC_MANAGER_ALL_ACCESS) : (NativeMethods.SC_MANAGER_CONNECT|NativeMethods.SC_MANAGER_ENUMERATE_SERVICE|NativeMethods.SC_MANAGER_QUERY_LOCK_STATUS|NativeMethods.STANDARD_RIGHTS_READ);
@@ -52,7 +52,7 @@ namespace Jannesen.Service.Windows
             _fullAccess = fullAccess;
         }
 
-        public              Service                         CreateService(string serviceName, string displayName, string binaryPathName, string serviceStartName, string password)
+        public              Service                         CreateService(string serviceName, string displayName, string binaryPathName, string serviceStartName, string? password)
         {
             IntPtr  serviceHandle = NativeMethods.CreateService(_handle,
                                                            serviceName,
@@ -96,7 +96,7 @@ namespace Jannesen.Service.Windows
             assignHandle(handle);
         }
 
-        public              void                            ChangeServiceConfig(string displayName, string binaryPathName, string serviceStartName, string password)
+        public              void                            ChangeServiceConfig(string displayName, string binaryPathName, string serviceStartName, string? password)
         {
             if (!NativeMethods.ChangeServiceConfig( _handle,
                                               NativeMethods.SERVICE_TYPE_WIN32_OWN_PROCESS,

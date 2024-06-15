@@ -6,9 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Jannesen.Service.Windows;
-using Jannesen.Service.Settings;
-
-#pragma warning disable CA2213 // Disposable fields should be disposed
+using Jannesen.Configuration.Settings;
 
 namespace Jannesen.Service.ServiceProcess
 {
@@ -17,31 +15,31 @@ namespace Jannesen.Service.ServiceProcess
         private struct LogEntry
         {
             public          DateTime    Timestamp;
-            public          string      Source;
-            public          string      Type;
-            public          string      Message;
-            public          object      Data;
+            public          string?     Source;
+            public          string?     Type;
+            public          string?     Message;
+            public          object?     Data;
         }
 
         public  const           string                          EventLogName = "Application";
 
-        private     static      ServiceBase                     _serviceInstance;
+        private     static      ServiceBase?                    _serviceInstance;
         private                 string                          _serviceName;
         private     readonly    bool                            _debuggerLogging;
         private                 bool                            _console;
         private                 bool                            _stopping;
         private                 bool                            _shutingdown;
         private                 bool                            _logTimestamp;
-        private                 EventLog                        _eventLog;
+        private                 EventLog?                       _eventLog;
         private     volatile    bool                            _debugLogActive;
-        private                 string                          _debugLogDirectory;
-        private                 List<LogEntry>                  _debugLogBuffer;
-        private                 StreamWriter                    _debugLogStreamWriter;
+        private                 string?                         _debugLogDirectory;
+        private                 List<LogEntry>?                 _debugLogBuffer;
+        private                 StreamWriter?                   _debugLogStreamWriter;
         private                 int                             _debugLogDay;
-        private                 Timer                           _debugLogFlushTimer;
+        private                 Timer?                          _debugLogFlushTimer;
         private     readonly    object                          _debugLogFlushLock;
         private     readonly    object                          _logLock;
-        private                 Delegate                        __serviceControlCallback;
+        private                 Delegate?                       __serviceControlCallback;
         private                 IntPtr                          _statusHandle;
         private                 NativeMethods.SERVICE_STATUS    _serviceStatus;
         private static readonly object                          _lockErrorToString = new object();
@@ -55,7 +53,7 @@ namespace Jannesen.Service.ServiceProcess
 
         protected                                               ServiceBase()
         {
-            _debuggerLogging = Debugger.IsAttached && Debugger.IsLogging();
+            _debuggerLogging                        = Debugger.IsAttached && Debugger.IsLogging();
             _serviceStatus.ServiceType              = NativeMethods.SERVICE_TYPE_WIN32_OWN_PROCESS;
             _serviceStatus.CurrentState             = 0;
             _serviceStatus.ControlsAccepted         = NativeMethods.SERVICE_ACCEPT_STOP | NativeMethods.SERVICE_ACCEPT_SHUTDOWN;
@@ -70,7 +68,8 @@ namespace Jannesen.Service.ServiceProcess
             _debugLogFlushTimer                     = null;
             _debugLogFlushLock                      = new object();
             _logLock                                = new object();
-            _serviceInstance = this;
+            _serviceInstance                        = this;
+            _serviceName                            = "";
         }
                                                                 ~ServiceBase()
         {
@@ -88,14 +87,14 @@ namespace Jannesen.Service.ServiceProcess
                     _debugLogStop();
                 }
 
-                if (_eventLog != null)              _eventLog.Dispose();
+                _eventLog?.Dispose();
             }
         }
 
         public      static      ServiceBase                     ServiceInstance
         {
             get {
-                return _serviceInstance;
+                return _serviceInstance!;
             }
         }
         public                  string                          ServiceName
@@ -185,15 +184,15 @@ namespace Jannesen.Service.ServiceProcess
         {
             LogError(null, ErrorToString(error, true));
         }
-        public                  void                            LogDebug(object source, string message)
+        public                  void                            LogDebug(object? source, string? message)
         {
             LogDebug(source, "DBG", message);
         }
-        public                  void                            LogDebug(object source, Exception error)
+        public                  void                            LogDebug(object? source, Exception? error)
         {
             LogDebug(source, "DBG-ERROR", ErrorToString(error, false));
         }
-        public                  void                            LogDebug(object source, string type, string message)
+        public                  void                            LogDebug(object? source, string? type, string? message)
         {
             if (_debugLogActive) {
                 lock(_logLock) {
@@ -201,7 +200,7 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public                  void                            LogDebug(object source, string type, string message, object data)
+        public                  void                            LogDebug(object? source, string? type, string? message, object data)
         {
             if (_debugLogActive) {
                 lock(_logLock) {
@@ -209,34 +208,34 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public                  void                            LogInfo(object source, string message)
+        public                  void                            LogInfo(object? source, string? message)
         {
             LogWrite(EventLogEntryType.Information, SafeToString(source), message);
         }
-        public                  void                            LogWarning(object source, string message)
+        public                  void                            LogWarning(object? source, string? message)
         {
             LogWrite(EventLogEntryType.Warning, SafeToString(source), message);
         }
-        public                  void                            LogWarning(object source, Exception error)
+        public                  void                            LogWarning(object? source, Exception? error)
         {
             LogWrite(EventLogEntryType.Warning, SafeToString(source), ErrorToString(error, false));
         }
-        public                  void                            LogError(object source, string message)
+        public                  void                            LogError(object? source, string ?message)
         {
             LogWrite(EventLogEntryType.Error, SafeToString(source), message);
         }
-        public                  void                            LogError(object source, Exception error)
+        public                  void                            LogError(object? source, Exception? error)
         {
             LogWrite(EventLogEntryType.Error, SafeToString(source), ErrorToString(error, true));
         }
-        public                  void                            LogWrite(EventLogEntryType type, string source, string message)
+        public                  void                            LogWrite(EventLogEntryType type, string? source, string? message)
         {
             try {
                 DateTime    timestamp = DateTime.UtcNow;
-                string      srcmsg = (source != null) ? source + ": " + message : message;
+                string?     srcmsg = (source != null) ? source + ": " + message : message;
 
                 lock(_logLock) {
-                    string stimestamp = _logTimestamp ? timestamp.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture) : null;
+                    var stimestamp = _logTimestamp ? timestamp.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture) : null;
 
                     if (_debuggerLogging)
                         Trace.WriteLine(stimestamp != null ? stimestamp + ": " + srcmsg : srcmsg);
@@ -247,23 +246,22 @@ namespace Jannesen.Service.ServiceProcess
                     if (_console)
                         Console.WriteLine(stimestamp != null ? stimestamp + ": " + srcmsg : srcmsg);
 
-                    if (_eventLog!=null)
-                        _eventLog.WriteEntry(srcmsg, (System.Diagnostics.EventLogEntryType)type, 0);
+                    _eventLog?.WriteEntry(srcmsg, (System.Diagnostics.EventLogEntryType)type, 0);
                 }
             }
             catch(Exception Err) {
                 Trace.WriteLine("WriteLog failed: "+Err.Message);
             }
         }
-        protected   virtual     void                            LogDataWriter(StreamWriter writer, object data)
+        protected   virtual     void                            LogDataWriter(StreamWriter writer, object? data)
         {
-            writer.Write(data.ToString());
+            writer.Write(data?.ToString());
         }
 
         public                  int                             Run(string[] args)
         {
             try {
-                if (args is null) throw new ArgumentNullException(nameof(args));
+                ArgumentNullException.ThrowIfNull(args);
 
                 _console     = _hasConsole();
                 _serviceName = AppSettings.GetSetting("service-name");
@@ -347,10 +345,10 @@ namespace Jannesen.Service.ServiceProcess
             return 0;
         }
 
-        public      static      string                          ErrorToString(Exception err, bool allowDumpStack)
+        public      static      string                          ErrorToString(Exception? err, bool allowDumpStack)
         {
             try {
-                string      Message      = null;
+                string?     Message      = null;
                 bool        DumpStack    = false;
                 string      StackTrace   = string.Empty;
 
@@ -365,8 +363,8 @@ namespace Jannesen.Service.ServiceProcess
                             Msg = string.Empty;
                         }
                         else
-                        if (err is NotImplementedException) {
-                            Msg = "Not implemented: "+((NotImplementedException)err).Message;
+                        if (err is NotImplementedException nerr) {
+                            Msg = "Not implemented: "+nerr.Message;
                             DumpStack = true;
                         }
                         else {
@@ -400,8 +398,6 @@ namespace Jannesen.Service.ServiceProcess
                                  err is System.Runtime.InteropServices.MarshalDirectiveException ||
                                  err is System.Runtime.InteropServices.SafeArrayRankMismatchException ||
                                  err is System.Runtime.InteropServices.SafeArrayTypeMismatchException ||
-                                 err is System.Runtime.Remoting.RemotingException ||
-                                 err is System.Runtime.Remoting.ServerException ||
                                  err is System.Runtime.Serialization.SerializationException ||
                                  err is System.Security.Cryptography.CryptographicException ||
                                  err is System.Security.Policy.PolicyException ||
@@ -416,8 +412,8 @@ namespace Jannesen.Service.ServiceProcess
                                  err is System.TypeLoadException ||
                                  err is System.TypeUnloadedException ||
                                  err is System.UnauthorizedAccessException) &&
-                                !(err is System.Runtime.InteropServices.ExternalException) &&
-                                !(err is  System.Net.WebException))
+                                 err is not System.Runtime.InteropServices.ExternalException &&
+                                 err is not System.Net.WebException)
                             {
                                 Msg = "Exception "+err.GetType().FullName+". "+err.Message;
                                 DumpStack = true;
@@ -427,10 +423,10 @@ namespace Jannesen.Service.ServiceProcess
                         }
 
                         if (Msg.Length>0) {
-                            Msg = Msg.Replace("\r\n", " ");
+                            Msg = Msg.Replace("\r\n", " ", StringComparison.Ordinal);
 
                             if (Message!=null) {
-                                if (!Message.EndsWith(".", StringComparison.Ordinal))
+                                if (!Message.EndsWith('.'))
                                     Message += ".";
 
                                 Message += " "+Msg;
@@ -446,7 +442,7 @@ namespace Jannesen.Service.ServiceProcess
                         Message += "\r\nSTACKTRACE:\r\n"+StackTrace;
                 }
 
-                return Message;
+                return Message ?? "[err is NULL]";
             }
             catch(Exception Err2) {
                 try {
@@ -503,7 +499,7 @@ namespace Jannesen.Service.ServiceProcess
                 string[]    args = new string[argCount-1];
 
                 for (int i = 1 ; i<argCount ; ++i)
-                    args[i-1] = Marshal.PtrToStringUni(((IntPtr *)argPointer)[i]);
+                    args[i-1] = Marshal.PtrToStringUni(((IntPtr *)argPointer)[i])!;
 
                 _serviceMain(args);
             }
@@ -663,27 +659,30 @@ namespace Jannesen.Service.ServiceProcess
             if (_debuggerLogging)
                 Trace.WriteLine(Message);
         }
-        private                 void                            _debugLogWrite(DateTime timestamp, string source, string type, string message, object data)
+        private                 void                            _debugLogWrite(DateTime timestamp, string? source, string? type, string? message, object? data)
         {
             try {
-                _debugLogBuffer.Add(new LogEntry() {
-                                        Timestamp = timestamp,
-                                        Source    = SafeToString(source),
-                                        Type      = type,
-                                        Message   = message,
-                                        Data      = data
-                                    });
-                if (_debugLogBuffer.Count == 256)
-                    _debugLogFlushTimer.Change(10, Timeout.Infinite);
+                if (_debugLogBuffer != null) {
+                    _debugLogBuffer.Add(new LogEntry() {
+                                            Timestamp = timestamp,
+                                            Source    = SafeToString(source),
+                                            Type      = type,
+                                            Message   = message,
+                                            Data      = data
+                                        });
+                    if (_debugLogBuffer.Count == 256) {
+                        _debugLogFlushTimer?.Change(10, Timeout.Infinite);
+                    }
+                }
             }
             catch(Exception err) {
                 _debugLogActive = false;
                 LogError("DebugLog", err);
             }
         }
-        private                 void                            _debugLogFlush(object state)
+        private                 void                            _debugLogFlush(object? state)
         {
-            List<LogEntry>      buffer;
+            List<LogEntry>?     buffer;
 
             lock(_debugLogFlushLock) {
                 try {
@@ -696,11 +695,10 @@ namespace Jannesen.Service.ServiceProcess
                         foreach(var entry in buffer)
                             _debugLogWriteEntry(entry);
 
-                        _debugLogStreamWriter.Flush();
+                        _debugLogStreamWriter?.Flush();
                     }
 
-                    if (_debugLogFlushTimer != null)
-                        _debugLogFlushTimer.Change(1000, Timeout.Infinite);
+                    _debugLogFlushTimer?.Change(1000, Timeout.Infinite);
                 }
                 catch(Exception err) {
                     _debugLogActive = false;
@@ -712,7 +710,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             _debugLogOpen(logEntry.Timestamp);
 
-            var streamWriter = _debugLogStreamWriter;
+            var streamWriter = _debugLogStreamWriter!;
 
             streamWriter.Write(logEntry.Timestamp.ToString("MM/dd HH:mm:ss.fff", CultureInfo.InvariantCulture));
             streamWriter.Write('\t');
@@ -724,22 +722,24 @@ namespace Jannesen.Service.ServiceProcess
             int     b = 0;
             int     p;
 
-            while ((p = logEntry.Message.IndexOf("\r\n", b, StringComparison.Ordinal)) >= 0) {
-                while (b < p)
-                    streamWriter.Write(logEntry.Message[b++]);
-
-                b += 2;
-
-                if (b < logEntry.Message.Length)
-                    streamWriter.Write('\xA6');
-            }
-
-            if (b < logEntry.Message.Length) {
-                if (b == 0)
-                    streamWriter.Write(logEntry.Message);
-                else {
-                    while (b < logEntry.Message.Length)
+            if (logEntry.Message != null) {
+                while ((p = logEntry.Message.IndexOf("\r\n", b, StringComparison.Ordinal)) >= 0) {
+                    while (b < p)
                         streamWriter.Write(logEntry.Message[b++]);
+
+                    b += 2;
+
+                    if (b < logEntry.Message.Length)
+                        streamWriter.Write('\xA6');
+                }
+
+                if (b < logEntry.Message.Length) {
+                    if (b == 0)
+                        streamWriter.Write(logEntry.Message);
+                    else {
+                        while (b < logEntry.Message.Length)
+                            streamWriter.Write(logEntry.Message[b++]);
+                    }
                 }
             }
 
@@ -748,7 +748,7 @@ namespace Jannesen.Service.ServiceProcess
                 LogDataWriter(streamWriter, logEntry.Data);
             }
 
-            _debugLogStreamWriter.Write('\n');
+            streamWriter.Write('\n');
         }
         private                 void                            _debugLogOpen(DateTime timestamp)
         {
@@ -764,7 +764,7 @@ namespace Jannesen.Service.ServiceProcess
 
                 var     datetime      = new DateTime(day * TimeSpan.TicksPerDay);
                 string  baseFileName  = _debugLogDirectory + @"\" + datetime.ToString(@"yyyy\\MM\\", CultureInfo.InvariantCulture) + _serviceName + datetime.ToString(@"-yyyy-MM-dd", CultureInfo.InvariantCulture);
-                string  directoryName = Path.GetDirectoryName(baseFileName);
+                string  directoryName = Path.GetDirectoryName(baseFileName)!;
 
                 if (!Directory.Exists(directoryName))
                     Directory.CreateDirectory(directoryName);
@@ -826,11 +826,11 @@ namespace Jannesen.Service.ServiceProcess
                         disposable.Dispose();
                 }
                 catch(Exception err) {
-                    _serviceInstance.LogError(disposable, new Exception("Dispose failed.", err));
+                    ServiceInstance.LogError(disposable, new Exception("Dispose failed.", err));
                 }
             }
         }
-        public      static      string                          SafeToString(object o)
+        public      static      string?                         SafeToString(object? o)
         {
             if (o != null) {
                 try {

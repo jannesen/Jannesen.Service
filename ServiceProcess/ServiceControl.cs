@@ -6,16 +6,16 @@ namespace Jannesen.Service.ServiceProcess
 {
     public static class ServiceControl
     {
-        public      static      void            ServiceDefine(string serviceName, string serviceDisplayName, string binaryPathName, string accountName, string accountPassword)
+        public      static      void            ServiceDefine(string serviceName, string serviceDisplayName, string binaryPathName, string accountName, string? accountPassword)
         {
-            if (serviceName is null) throw new ArgumentNullException(nameof(serviceName));
-            if (serviceDisplayName is null) throw new ArgumentNullException(nameof(serviceDisplayName));
-            if (binaryPathName is null) throw new ArgumentNullException(nameof(binaryPathName));
-            if (accountName is null) throw new ArgumentNullException(nameof(accountName));
+            ArgumentNullException.ThrowIfNull(serviceName);
+            ArgumentNullException.ThrowIfNull(serviceDisplayName);
+            ArgumentNullException.ThrowIfNull(binaryPathName);
+            ArgumentNullException.ThrowIfNull(accountName);
 
             Console.WriteLine("# create/update service: " + serviceName);
 
-            if (accountName.IndexOf('\\') < 0) {
+            if (accountName.IndexOf('\\', StringComparison.Ordinal) < 0) {
                 switch(accountName.ToUpperInvariant()) {
                 case "NT SERVICE":
                     accountName     = "NT SERVICE\\" + serviceName;
@@ -58,7 +58,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         public      static      void            ServiceRemove(string serviceName)
         {
-            if (serviceName is null) throw new ArgumentNullException(nameof(serviceName));
+            ArgumentNullException.ThrowIfNull(serviceName);
 
             Console.WriteLine("# remove service: " + serviceName);
 
@@ -75,7 +75,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         public      static      void            ServiceStart(string serviceName)
         {
-            if (serviceName is null) throw new ArgumentNullException(nameof(serviceName));
+            ArgumentNullException.ThrowIfNull(serviceName);
 
             using (ServiceManager serviceManager = new ServiceManager()) {
                 using (var service = serviceManager.OpenService(serviceName)) {
@@ -85,7 +85,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         public      static      void            ServiceStop(string serviceName)
         {
-            if (serviceName is null) throw new ArgumentNullException(nameof(serviceName));
+            ArgumentNullException.ThrowIfNull(serviceName);
 
             using (ServiceManager serviceManager = new ServiceManager()) {
                 using (var service = serviceManager.OpenService(serviceName)) {

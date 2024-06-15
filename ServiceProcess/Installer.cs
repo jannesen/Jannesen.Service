@@ -1,15 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Data.SqlClient;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using Jannesen.Service.Settings;
+using Jannesen.Configuration.Settings;
 using Jannesen.Service.Windows;
+using Microsoft.Data.SqlClient;
 
 #pragma warning disable CA1822 // CA1822: Mark members as static
-#pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
 
 namespace Jannesen.Service.ServiceProcess
 {
@@ -25,12 +24,12 @@ namespace Jannesen.Service.ServiceProcess
         public              string              ServiceName             { get ; private set ; }
         public              string              ServiceDisplayName      { get ; private set ; }
         public              string              AccountName             { get ; private set ; }
-        public              string              AccountPassword         { get ; private set ; }
+        public              string?             AccountPassword         { get ; private set ; }
 
         public              string              AccountFullName
         {
             get {
-                if (AccountName.IndexOf('\\') > 0)
+                if (AccountName.IndexOf('\\', StringComparison.Ordinal) > 0)
                     return AccountName;
 
                 switch(AccountName.ToUpperInvariant()) {
@@ -42,10 +41,10 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public              SecurityIdentifier  AccountSecurityIdentifier
+        public              SecurityIdentifier? AccountSecurityIdentifier
         {
             get {
-                try { 
+                try {
                     return (new NTAccount(AccountFullName)).Translate(typeof(SecurityIdentifier)) as SecurityIdentifier;
                 }
                 catch(IdentityNotMappedException) {
@@ -85,7 +84,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             if (InstallMode == InstallMode.Install) {
                 InstallMode = InstallMode.Install;
-                if (!predefinedAccount || AccountName.IndexOf('\\') > 0) {
+                if (!predefinedAccount || AccountName.IndexOf('\\', StringComparison.Ordinal) > 0) {
                     ReadPassword();
                     AccountLSASetServiceLogonRigh();
                 }
@@ -163,10 +162,11 @@ namespace Jannesen.Service.ServiceProcess
             try {
                 SetAclDirectory(AppSettings.ProgramDirectory, FileSystemRights.ReadAndExecute);
 
-                string file = System.Configuration.ConfigurationManager.OpenExeConfiguration(AppSettings.ProgramExe).AppSettings.File;
+                SetAclFile(AppSettings.ProgramExe, FileSystemRights.ReadAndExecute);
 
-                if (!string.IsNullOrEmpty(file))
-                    SetAclFile(Path.Combine(AppSettings.ProgramDirectory, file), FileSystemRights.ReadAndExecute);
+                foreach(var filename in AppSettings.ConfigFilenames) {
+                    SetAclFile(filename, FileSystemRights.ReadAndExecute);
+                }
             }
             catch(Exception err) {
                 Error(new InstallerException("SetStandardFileFolderRights failed.", err));
@@ -209,20 +209,22 @@ namespace Jannesen.Service.ServiceProcess
 
                         CreatePath(path);
 
-                        var     acl  = Directory.GetAccessControl(path);
+                        var dirInfo = new DirectoryInfo(path);
+                        var acl     = dirInfo.GetAccessControl();
                         acl.SetAccessRule(new FileSystemAccessRule(si,
                                                                    rights,
                                                                    InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
                                                                    PropagationFlags.None,
                                                                    AccessControlType.Allow));
-                        Directory.SetAccessControl(path, acl);
+                        dirInfo.SetAccessControl(acl);
                     }
                     else {
                         if (si != null && Directory.Exists(path)) {
                             Console.WriteLine("# remove acl on directory: " + path);
-                            var   acl  = Directory.GetAccessControl(path);
+                            var dirInfo = new DirectoryInfo(path);
+                            var acl     = dirInfo.GetAccessControl();
                             acl.PurgeAccessRules(si);
-                            Directory.SetAccessControl(path, acl);
+                            dirInfo.SetAccessControl(acl);
                         }
                     }
                 }
@@ -243,7 +245,8 @@ namespace Jannesen.Service.ServiceProcess
 
                     if (InstallMode == InstallMode.Install) {
                         Console.WriteLine("# set acl on file: " + path);
-                        var acl = File.GetAccessControl(path);
+                        var fileInfo = new FileInfo(path);
+                        var acl      = fileInfo.GetAccessControl();
                         if (si == null) {
                             throw new IdentityNotMappedException("Can't map '" + AccountFullName + "' to SecurityIdentifier.");
                         }
@@ -253,14 +256,15 @@ namespace Jannesen.Service.ServiceProcess
                                                                     InheritanceFlags.None,
                                                                     PropagationFlags.None,
                                                                     AccessControlType.Allow));
-                        File.SetAccessControl(path, acl);
+                        fileInfo.SetAccessControl(acl);
                     }
                     else {
                         if (si != null && File.Exists(path)) { 
                             Console.WriteLine("# remove acl on file: " + path);
-                            var acl = File.GetAccessControl(path);
+                            var fileInfo = new FileInfo(path);
+                            var acl      = fileInfo.GetAccessControl();
                             acl.PurgeAccessRules(si);
-                            File.SetAccessControl(path, acl);
+                            fileInfo.SetAccessControl(acl);
                         }
                     }
                 }
@@ -276,7 +280,7 @@ namespace Jannesen.Service.ServiceProcess
         public              void                DatabaseLoginUser()
         {
             try {
-                string role = AppSettings.GetSetting("service-database-role", null);
+                var role = AppSettings.GetSetting("service-database-role", null);
 
                 if (role != null) {
                     DatabaseLoginUser(AppSettings.GetSetting("database-server"), AppSettings.GetSetting("database-name"), role);
@@ -288,12 +292,12 @@ namespace Jannesen.Service.ServiceProcess
         }
         public              void                DatabaseLoginUser(string server, string database, string role)
         {
-            if (server is null) throw new ArgumentNullException(nameof(server));
-            if (database is null) throw new ArgumentNullException(nameof(database));
-            if (role is null) throw new ArgumentNullException(nameof(role));
+            ArgumentNullException.ThrowIfNull(server);
+            ArgumentNullException.ThrowIfNull(database);
+            ArgumentNullException.ThrowIfNull(role);
 
             try {
-                if (AccountName.ToUpperInvariant() != "NT SERVICE")
+                if (string.CompareOrdinal(AccountName, "NT SERVICE") != 0)
                     return ;
 
                 string accountName = "NT SERVICE\\" + ServiceName;
@@ -303,32 +307,32 @@ namespace Jannesen.Service.ServiceProcess
 
                     using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                         Console.WriteLine("# database drop user: " + accountName);
-                        sqlCmd.CommandText = "IF EXISTS (SELECT * FROM sys.sysusers WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP USER [" + accountName.Replace("]", "[]") + "]";
+                        sqlCmd.CommandText = "IF EXISTS (SELECT * FROM sys.sysusers WHERE [name] = '" + accountName.Replace("'", "''", StringComparison.Ordinal) + "') DROP USER [" + accountName.Replace("]", "[]", StringComparison.Ordinal) + "]";
                         sqlCmd.ExecuteNonQuery();
                     }
 
                     using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                         Console.WriteLine("# database drop login: " + accountName);
-                        sqlCmd.CommandText = "IF EXISTS (SELECT * FROM master.sys.server_principals WHERE [name] = '" + accountName.Replace("'", "''") + "') DROP LOGIN [" + accountName.Replace("]", "[]") + "]";
+                        sqlCmd.CommandText = "IF EXISTS (SELECT * FROM master.sys.server_principals WHERE [name] = '" + accountName.Replace("'", "''", StringComparison.Ordinal) + "') DROP LOGIN [" + accountName.Replace("]", "[]", StringComparison.Ordinal) + "]";
                         sqlCmd.ExecuteNonQuery();
                     }
 
                     if (InstallMode == InstallMode.Install) {
                         using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                             Console.WriteLine("# database create login: " + accountName);
-                            sqlCmd.CommandText = "CREATE LOGIN [" + accountName.Replace("]", "[]") + "] FROM WINDOWS";
+                            sqlCmd.CommandText = "CREATE LOGIN [" + accountName.Replace("]", "[]", StringComparison.Ordinal) + "] FROM WINDOWS";
                             sqlCmd.ExecuteNonQuery();
                         }
 
                         using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                             Console.WriteLine("# database create user: " + accountName);
-                            sqlCmd.CommandText = "CREATE USER [" + accountName.Replace("]", "[]") + "]";
+                            sqlCmd.CommandText = "CREATE USER [" + accountName.Replace("]", "[]", StringComparison.Ordinal) + "]";
                             sqlCmd.ExecuteNonQuery();
                         }
 
                         using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
                             Console.WriteLine("# database add user to role: " + role);
-                            sqlCmd.CommandText = "ALTER ROLE [" + role.Replace("]", "[]") + "] ADD MEMBER [" + accountName.Replace("]", "[]") + "]";
+                            sqlCmd.CommandText = "ALTER ROLE [" + role.Replace("]", "[]", StringComparison.Ordinal) + "] ADD MEMBER [" + accountName.Replace("]", "[]", StringComparison.Ordinal) + "]";
                             sqlCmd.ExecuteNonQuery();
                         }
                     }
@@ -341,7 +345,7 @@ namespace Jannesen.Service.ServiceProcess
 
         public              void                HttpUrlAcl(string binding)
         {
-            if (binding is null) throw new ArgumentNullException(nameof(binding));
+            ArgumentNullException.ThrowIfNull(binding);
 
             try {
                 Exec("netsh", "http delete urlacl url=" + binding, redirectOutput:true);
@@ -372,9 +376,9 @@ namespace Jannesen.Service.ServiceProcess
 
         public              void                FirewallAddRule(string name, string protocol, string port)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
-            if (protocol is null) throw new ArgumentNullException(nameof(protocol));
-            if (port is null) throw new ArgumentNullException(nameof(port));
+            ArgumentNullException.ThrowIfNull(name);
+            ArgumentNullException.ThrowIfNull(protocol);
+            ArgumentNullException.ThrowIfNull(port);
 
             try {
                 Console.WriteLine("# add firewall rule: " + name);
@@ -387,8 +391,8 @@ namespace Jannesen.Service.ServiceProcess
 
         public              void                Exec(string filename, string arguments, bool redirectOutput=false)
         {
-            if (filename is null) throw new ArgumentNullException(nameof(filename));
-            if (arguments is null) throw new ArgumentNullException(nameof(arguments));
+            ArgumentNullException.ThrowIfNull(filename);
+            ArgumentNullException.ThrowIfNull(arguments);
 
             using (var proc = new System.Diagnostics.Process()) {
                 proc.StartInfo.UseShellExecute = false;
@@ -408,7 +412,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         public              void                PowerShell(string cmd)
         {
-            if (cmd is null) throw new ArgumentNullException(nameof(cmd));
+            ArgumentNullException.ThrowIfNull(cmd);
 
             using(var proc = new System.Diagnostics.Process()) {
                 proc.StartInfo.UseShellExecute = false;
@@ -424,10 +428,13 @@ namespace Jannesen.Service.ServiceProcess
 
         public              void                CreatePath(string path)
         {
-            if (path is null) throw new ArgumentNullException(nameof(path));
+            ArgumentNullException.ThrowIfNull(path);
 
             if (!Directory.Exists(path)) {
-                CreatePath(Path.GetDirectoryName(path));
+                var p = Path.GetDirectoryName(path);
+                if (p != null) {
+                    CreatePath(p);
+                }
 
                 Console.WriteLine("# createdirectory: " + path);
                 Directory.CreateDirectory(path);
@@ -436,10 +443,10 @@ namespace Jannesen.Service.ServiceProcess
 
         public              bool                validatePassword()
         {
-            string              domainName;
+            string?             domainName;
             string              userName;
 
-            int     i = AccountName.IndexOf('\\');
+            int     i = AccountName.IndexOf('\\', StringComparison.Ordinal);
             if (i >= 0) {
                 domainName = AccountName.Substring(0, i);
                 userName   = AccountName.Substring(i + 1);
@@ -460,7 +467,7 @@ namespace Jannesen.Service.ServiceProcess
             else
                 DisplayError(err);
         }
-        public              void                DisplayError(Exception err)
+        public              void                DisplayError(Exception? err)
         {
             Console.Write("ERROR:");
             while (err != null) {
@@ -471,16 +478,12 @@ namespace Jannesen.Service.ServiceProcess
         }
     }
 
-    [Serializable]
     public class InstallerException: Exception
     {
         public              InstallerException(string message) : base(message)
         {
         }
         public              InstallerException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-        protected           InstallerException(SerializationInfo info, StreamingContext context): base(info, context)
         {
         }
     }
