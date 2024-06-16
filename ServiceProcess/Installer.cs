@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Jannesen.Configuration.Settings;
@@ -131,7 +130,7 @@ namespace Jannesen.Service.ServiceProcess
             try {
                 Console.WriteLine("# Set lsa policies SeServiceLogonRight on user: " + AccountName);
 
-                using (LsaPolicy lsaPolicy = new LsaPolicy())
+                using (var lsaPolicy = new LsaPolicy())
                     lsaPolicy.Set(AccountName, "SeServiceLogonRight");
             }
             catch(Exception err) {
@@ -144,7 +143,7 @@ namespace Jannesen.Service.ServiceProcess
                 Console.WriteLine("# remove lsa policies from user: " + AccountName);
 
                 try {
-                    using (LsaPolicy lsaPolicy = new LsaPolicy())
+                    using (var lsaPolicy = new LsaPolicy())
                         lsaPolicy.ResetAll(AccountName);
                 }
                 catch(Win32Exception err) {
@@ -176,7 +175,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             try {
                 if (AppSettings.GetSetting("service-debuglog", "0") == "1") {
-                    string logDirectory = AppSettings.GetSetting("logdirectory") + @"\" + ServiceName;
+                    var logDirectory = AppSettings.GetSetting("logdirectory") + @"\" + ServiceName;
 
                     if (InstallMode == InstallMode.Install) {
                         try {
@@ -300,9 +299,9 @@ namespace Jannesen.Service.ServiceProcess
                 if (string.CompareOrdinal(AccountName, "NT SERVICE") != 0)
                     return ;
 
-                string accountName = "NT SERVICE\\" + ServiceName;
+                var accountName = "NT SERVICE\\" + ServiceName;
 
-                using (SqlConnection sqlConnection = new SqlConnection("Server=" + server + ";Database=" + database + ";Current Language=us_english;Connection Reset=false;Connect Timeout=15;Pooling=No;Trusted_Connection=true")) {
+                using (var sqlConnection = new SqlConnection("Server=" + server + ";Database=" + database + ";Current Language=us_english;Connection Reset=false;Connect Timeout=15;Pooling=No;Trusted_Connection=true")) {
                     sqlConnection.Open();
 
                     using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
@@ -443,10 +442,10 @@ namespace Jannesen.Service.ServiceProcess
 
         public              bool                validatePassword()
         {
-            string?             domainName;
-            string              userName;
+            string? domainName;
+            string  userName;
 
-            int     i = AccountName.IndexOf('\\', StringComparison.Ordinal);
+            var i = AccountName.IndexOf('\\', StringComparison.Ordinal);
             if (i >= 0) {
                 domainName = AccountName.Substring(0, i);
                 userName   = AccountName.Substring(i + 1);
@@ -456,7 +455,7 @@ namespace Jannesen.Service.ServiceProcess
                 userName   = AccountName;
             }
 
-            using (System.DirectoryServices.AccountManagement.PrincipalContext pc = new System.DirectoryServices.AccountManagement.PrincipalContext(domainName != null ? System.DirectoryServices.AccountManagement.ContextType.Domain : System.DirectoryServices.AccountManagement.ContextType.Machine, domainName))
+            using (var pc = new System.DirectoryServices.AccountManagement.PrincipalContext(domainName != null ? System.DirectoryServices.AccountManagement.ContextType.Domain : System.DirectoryServices.AccountManagement.ContextType.Machine, domainName))
                 return pc.ValidateCredentials(userName, AccountPassword);
         }
 

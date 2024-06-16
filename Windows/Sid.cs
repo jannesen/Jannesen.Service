@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Jannesen.Service.Windows
 {
-    public struct  Sid: IEquatable<Sid>
+    public readonly struct  Sid: IEquatable<Sid>
     {
-        private static  Sid                 _Null = new Sid((byte[]?)null);
+        private static readonly     Sid     _Null = new Sid((byte[]?)null);
 
         public readonly byte[]?             sid;
 
@@ -82,11 +82,11 @@ namespace Jannesen.Service.Windows
                 if (sid[1]>15)
                     throw new Exception("Invalid SID");
 
-                int     length = 2+6+4*sid[1];
+                var length = 2+6+4*sid[1];
 
                 this.sid = new byte[length];
 
-                for (int i = 0 ; i<length; ++i)
+                for (var i = 0 ; i<length; ++i)
                     this.sid[i] = sid[i];
             }
             else
@@ -107,7 +107,7 @@ namespace Jannesen.Service.Windows
             if (accountName.IndexOf('\\', StringComparison.Ordinal) < 0)
                 return AccountSid(null, accountName);
 
-            using (System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry("WinNT://" + accountName.Replace('\\', '/'))) {
+            using (var entry = new System.DirectoryServices.DirectoryEntry("WinNT://" + accountName.Replace('\\', '/'))) {
                 if (entry.Properties["objectSid"].Count == 0)
                     throw new Exception("Unknown domain/username '" + accountName + "'.");
 
@@ -145,12 +145,11 @@ namespace Jannesen.Service.Windows
 
             default:
                 {
-                    System.Text.StringBuilder   DomainName   = new System.Text.StringBuilder(256);
-                    UInt32                      cbDomainName = (UInt32)DomainName.Capacity;
-                    NativeMethods.SidNameUse    Use = (NativeMethods.SidNameUse)0;
-
-                    UInt32      cbSid = 96;
-                    byte*       sid = stackalloc byte[(int)cbSid];
+                    var DomainName   = new System.Text.StringBuilder(256);
+                    var cbDomainName = (UInt32)DomainName.Capacity;
+                    var Use          = (NativeMethods.SidNameUse)0;
+                    var cbSid        = (UInt32)96;
+                    var sid          = stackalloc byte[(int)cbSid];
 
                     if (!NativeMethods.LookupAccountName(systemName, accountName, sid, &cbSid, DomainName, &cbDomainName, &Use))
                         throw NativeMethods.NewSystemError("System call LookupAccountName(\""+(systemName ?? ".")+"\",\"" + accountName + "\") failed");
@@ -169,7 +168,7 @@ namespace Jannesen.Service.Windows
         public                  IntPtr      AllocHGlobal()
         {
             if (sid == null) throw new InvalidOperationException("sid == null");
-            IntPtr ptr = Marshal.AllocHGlobal(96);
+            var ptr = Marshal.AllocHGlobal(96);
             Marshal.Copy(sid, 0, ptr, sid.Length);
             return ptr;
         }
@@ -181,11 +180,11 @@ namespace Jannesen.Service.Windows
         public unsafe           string      AccountName(string? systemName)
         {
             if (sid!=null) {
-                System.Text.StringBuilder   Name         = new System.Text.StringBuilder(256);
-                System.Text.StringBuilder   DomainName   = new System.Text.StringBuilder(256);
-                UInt32                      cbName       = (UInt32)Name.Capacity;
-                UInt32                      cbDomainName = (UInt32)DomainName.Capacity;
-                NativeMethods.SidNameUse            Use          = (NativeMethods.SidNameUse)0;
+                var Name         = new System.Text.StringBuilder(256);
+                var DomainName   = new System.Text.StringBuilder(256);
+                var cbName       = (UInt32)Name.Capacity;
+                var cbDomainName = (UInt32)DomainName.Capacity;
+                var Use          = (NativeMethods.SidNameUse)0;
 
                 fixed(byte* psid = sid)
                 {
@@ -210,7 +209,7 @@ namespace Jannesen.Service.Windows
         public override         string      ToString()
         {
             if (sid != null) {
-                var  rtn = new System.Text.StringBuilder(128);
+                var rtn = new System.Text.StringBuilder(128);
                 rtn.Append('S');
                 rtn.Append('-');
                 rtn.Append(sid[0]);
@@ -227,7 +226,7 @@ namespace Jannesen.Service.Windows
                                     )
                           );
 
-                for (int i = 8 ; i < sid.Length ; i+=4) {
+                for (var i = 8 ; i < sid.Length ; i+=4) {
                     rtn.Append('-');
                     rtn.Append( (((UInt32)sid[i+3])<<24)
                                |(((UInt32)sid[i+2])<<16)
@@ -249,7 +248,7 @@ namespace Jannesen.Service.Windows
 
             if (sid1.sid!=null && sid2.sid!=null) {
                 if (sid1.sid.Length==sid2.sid.Length) {
-                    for (int i = 0 ; i<sid1.sid.Length ; ++i) {
+                    for (var i = 0 ; i<sid1.sid.Length ; ++i) {
                         if (sid1.sid[i]!=sid2.sid[i])
                             return false;
                     }

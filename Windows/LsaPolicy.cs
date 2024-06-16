@@ -14,7 +14,7 @@ namespace Jannesen.Service.Windows
 
         public unsafe                   LsaPolicy(string systemName)
         {
-            NativeMethods.LSA_UNICODE_STRING    lsasSystemName = new NativeMethods.LSA_UNICODE_STRING(systemName);
+            var lsasSystemName = new NativeMethods.LSA_UNICODE_STRING(systemName);
 
             try {
                 _lsaOpen(&lsasSystemName);
@@ -46,11 +46,11 @@ namespace Jannesen.Service.Windows
         }
         public  unsafe      void        Set(Sid sid, string userRight)
         {
-            IntPtr                              psid          = sid.AllocHGlobal();
-            NativeMethods.LSA_UNICODE_STRING    lsasUserRight = new NativeMethods.LSA_UNICODE_STRING(userRight);
+            var psid          = sid.AllocHGlobal();
+            var lsasUserRight = new NativeMethods.LSA_UNICODE_STRING(userRight);
 
             try {
-                UInt32 rtn = NativeMethods.LsaAddAccountRights(_policyHandle, psid, &lsasUserRight, 1);
+                var rtn = NativeMethods.LsaAddAccountRights(_policyHandle, psid, &lsasUserRight, 1);
                 if (rtn!=0)
                     throw NativeMethods.NewSystemError("LsaAddAccountRights failed", NativeMethods.LsaNtStatusToWinError(rtn));
             }
@@ -65,11 +65,11 @@ namespace Jannesen.Service.Windows
         }
         public  unsafe      void        Reset(Sid sid, string userRight)
         {
-            IntPtr                              psid          = sid.AllocHGlobal();
-            NativeMethods.LSA_UNICODE_STRING    lsasUserRight = new NativeMethods.LSA_UNICODE_STRING(userRight);
+            var psid          = sid.AllocHGlobal();
+            var lsasUserRight = new NativeMethods.LSA_UNICODE_STRING(userRight);
 
             try {
-                UInt32 rtn = NativeMethods.LsaRemoveAccountRights(_policyHandle, psid, false, &lsasUserRight, 1);
+                var rtn = NativeMethods.LsaRemoveAccountRights(_policyHandle, psid, false, &lsasUserRight, 1);
                 if (rtn!=0)
                     throw NativeMethods.NewSystemError("LsaRemoveAccountRights failed", NativeMethods.LsaNtStatusToWinError(rtn));
             }
@@ -84,10 +84,10 @@ namespace Jannesen.Service.Windows
         }
         public  unsafe      void        ResetAll(Sid sid)
         {
-            IntPtr                      psid          = sid.AllocHGlobal();
+            var psid          = sid.AllocHGlobal();
 
             try {
-                UInt32 rtn = NativeMethods.LsaRemoveAccountRights(_policyHandle, psid, true, null, 0);
+                var rtn = NativeMethods.LsaRemoveAccountRights(_policyHandle, psid, true, null, 0);
                 if (rtn!=0)
                     throw NativeMethods.NewSystemError("LsaRemoveAccountRights failed", NativeMethods.LsaNtStatusToWinError(rtn));
             }
@@ -108,7 +108,7 @@ namespace Jannesen.Service.Windows
             lsaAttr.SecurityQualityOfService    = null;
             lsaAttr.Length                      = (UInt32)Marshal.SizeOf(typeof(NativeMethods.LSA_OBJECT_ATTRIBUTES));
 
-            UInt32 rtn = NativeMethods.LsaOpenPolicy(lsasSystemName, ref lsaAttr, NativeMethods.POLICY_ACCESS.CreateAccount|NativeMethods.POLICY_ACCESS.LookupNames, out var hLSA);
+            var rtn = NativeMethods.LsaOpenPolicy(lsasSystemName, ref lsaAttr, NativeMethods.POLICY_ACCESS.CreateAccount|NativeMethods.POLICY_ACCESS.LookupNames, out var hLSA);
             if (rtn!=0)
                 throw NativeMethods.NewSystemError("LsaOpenPolicy failed", NativeMethods.LsaNtStatusToWinError(rtn));
 

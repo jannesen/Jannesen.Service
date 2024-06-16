@@ -364,7 +364,7 @@ namespace Jannesen.Service.Windows
                                null);
 
                 if (pMsgText!=null) {
-                    string  MsgText = new string(pMsgText);
+                    var MsgText = new string(pMsgText);
                     NativeMethods.LocalFree((IntPtr)pMsgText);
                     return "["+Win32Error+"] " + MsgText.Trim();
                 }

@@ -136,7 +136,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         protected   virtual     int                             ServiceInstall()
         {
-            Installer installer = new Installer(InstallMode.Install);
+            var installer = new Installer(InstallMode.Install);
             installer.Execute();
             ServiceInstaller(installer);
 
@@ -144,7 +144,7 @@ namespace Jannesen.Service.ServiceProcess
         }
         protected   virtual     int                             ServiceUninstall()
         {
-            Installer installer = new Installer(InstallMode.Uninstall);
+            var installer = new Installer(InstallMode.Uninstall);
             ServiceInstaller(installer);
             installer.Execute();
             return 0;
@@ -231,8 +231,8 @@ namespace Jannesen.Service.ServiceProcess
         public                  void                            LogWrite(EventLogEntryType type, string? source, string? message)
         {
             try {
-                DateTime    timestamp = DateTime.UtcNow;
-                string?     srcmsg = (source != null) ? source + ": " + message : message;
+                var timestamp = DateTime.UtcNow;
+                var srcmsg = (source != null) ? source + ": " + message : message;
 
                 lock(_logLock) {
                     var stimestamp = _logTimestamp ? timestamp.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture) : null;
@@ -274,7 +274,7 @@ namespace Jannesen.Service.ServiceProcess
                     case "uninstall":       return ServiceUninstall();
 
                     case "run": {
-                            string[]    newArgs = new string[args.Length-1];
+                            var newArgs = new string[args.Length-1];
 
                             Array.Copy(args, 1, newArgs, 0, args.Length-1);
 
@@ -334,7 +334,7 @@ namespace Jannesen.Service.ServiceProcess
 
             unsafe
             {
-                NativeMethods.SERVICE_TABLE_ENTRY[]     entryTable = new NativeMethods.SERVICE_TABLE_ENTRY[2];
+                var entryTable = new NativeMethods.SERVICE_TABLE_ENTRY[2];
                 entryTable[0].name     = _serviceName;
                 entryTable[0].callback = new NativeMethods.ServiceMainCallback(this._serviceMainCallback);
 
@@ -348,9 +348,9 @@ namespace Jannesen.Service.ServiceProcess
         public      static      string                          ErrorToString(Exception? err, bool allowDumpStack)
         {
             try {
-                string?     Message      = null;
-                bool        DumpStack    = false;
-                string      StackTrace   = string.Empty;
+                var Message      = (string?)null;
+                var DumpStack    = false;
+                var StackTrace   = string.Empty;
 
                 lock(_lockErrorToString) {
                     while (err!=null) {
@@ -496,9 +496,9 @@ namespace Jannesen.Service.ServiceProcess
                 if (_statusHandle==IntPtr.Zero)
                     throw NativeMethods.NewSystemError("RegisterServiceCtrlHandlerEx failed");
 
-                string[]    args = new string[argCount-1];
+                var args = new string[argCount-1];
 
-                for (int i = 1 ; i<argCount ; ++i)
+                for (var i = 1 ; i<argCount ; ++i)
                     args[i-1] = Marshal.PtrToStringUni(((IntPtr *)argPointer)[i])!;
 
                 _serviceMain(args);
@@ -719,8 +719,8 @@ namespace Jannesen.Service.ServiceProcess
             streamWriter.Write(logEntry.Type);
             streamWriter.Write("\t");
 
-            int     b = 0;
-            int     p;
+            var b = 0;
+            int p;
 
             if (logEntry.Message != null) {
                 while ((p = logEntry.Message.IndexOf("\r\n", b, StringComparison.Ordinal)) >= 0) {
@@ -762,15 +762,15 @@ namespace Jannesen.Service.ServiceProcess
 
                 _debugLogDay = day;
 
-                var     datetime      = new DateTime(day * TimeSpan.TicksPerDay);
-                string  baseFileName  = _debugLogDirectory + @"\" + datetime.ToString(@"yyyy\\MM\\", CultureInfo.InvariantCulture) + _serviceName + datetime.ToString(@"-yyyy-MM-dd", CultureInfo.InvariantCulture);
-                string  directoryName = Path.GetDirectoryName(baseFileName)!;
+                var datetime      = new DateTime(day * TimeSpan.TicksPerDay);
+                var baseFileName  = _debugLogDirectory + @"\" + datetime.ToString(@"yyyy\\MM\\", CultureInfo.InvariantCulture) + _serviceName + datetime.ToString(@"-yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var directoryName = Path.GetDirectoryName(baseFileName)!;
 
                 if (!Directory.Exists(directoryName))
                     Directory.CreateDirectory(directoryName);
 
-                for (int seq = 1 ; seq < 100 ; ++ seq) {
-                    string fileName = baseFileName + "-" + seq.ToString("D3", CultureInfo.InvariantCulture) + ".log";
+                for (var seq = 1 ; seq < 100 ; ++ seq) {
+                    var fileName = baseFileName + "-" + seq.ToString("D3", CultureInfo.InvariantCulture) + ".log";
 
                     if (!File.Exists(fileName)) {
                         _debugLogStreamWriter = new StreamWriter(fileName, false, System.Text.Encoding.UTF8, 0x10000);

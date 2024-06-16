@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace Jannesen.Service.Windows
@@ -42,8 +40,8 @@ namespace Jannesen.Service.Windows
 
         public                                              ServiceManager(string? machineName = null, bool fullAccess = false)
         {
+            var dr = fullAccess ? (NativeMethods.SC_MANAGER_ALL_ACCESS) : (NativeMethods.SC_MANAGER_CONNECT|NativeMethods.SC_MANAGER_ENUMERATE_SERVICE|NativeMethods.SC_MANAGER_QUERY_LOCK_STATUS|NativeMethods.STANDARD_RIGHTS_READ);
             IntPtr  handle;
-            UInt32  dr = fullAccess ? (NativeMethods.SC_MANAGER_ALL_ACCESS) : (NativeMethods.SC_MANAGER_CONNECT|NativeMethods.SC_MANAGER_ENUMERATE_SERVICE|NativeMethods.SC_MANAGER_QUERY_LOCK_STATUS|NativeMethods.STANDARD_RIGHTS_READ);
 
             if ((handle = NativeMethods.OpenSCManager(machineName, null, dr))==IntPtr.Zero)
                 throw NativeMethods.NewSystemError("Can't open service control manager.");
@@ -54,19 +52,19 @@ namespace Jannesen.Service.Windows
 
         public              Service                         CreateService(string serviceName, string displayName, string binaryPathName, string serviceStartName, string? password)
         {
-            IntPtr  serviceHandle = NativeMethods.CreateService(_handle,
-                                                           serviceName,
-                                                           displayName,
-                                                           NativeMethods.SERVICE_ALL_ACCESS,
-                                                           NativeMethods.SERVICE_TYPE_WIN32_OWN_PROCESS,
-                                                           NativeMethods.SERVICE_DEMAND_START,
-                                                           NativeMethods.SERVICE_ERROR_NORMAL,
-                                                           binaryPathName,
-                                                           null,
-                                                           IntPtr.Zero,
-                                                           null,
-                                                           serviceStartName,
-                                                           password);
+            var serviceHandle = NativeMethods.CreateService(_handle,
+                                                            serviceName,
+                                                            displayName,
+                                                            NativeMethods.SERVICE_ALL_ACCESS,
+                                                            NativeMethods.SERVICE_TYPE_WIN32_OWN_PROCESS,
+                                                            NativeMethods.SERVICE_DEMAND_START,
+                                                            NativeMethods.SERVICE_ERROR_NORMAL,
+                                                            binaryPathName,
+                                                            null,
+                                                            IntPtr.Zero,
+                                                            null,
+                                                            serviceStartName,
+                                                            password);
 
             if (serviceHandle==IntPtr.Zero)
                 throw NativeMethods.NewSystemError("Create service '" + serviceName + "' failed");
@@ -75,10 +73,9 @@ namespace Jannesen.Service.Windows
         }
         public              Service                         OpenService(string serviceName)
         {
-            UInt32  dr = _fullAccess ? (NativeMethods.SERVICE_ALL_ACCESS) : (NativeMethods.SERVICE_QUERY_STATUS|NativeMethods.SERVICE_START|NativeMethods.SERVICE_STOP|NativeMethods.STANDARD_RIGHTS_READ);
+            var dr = _fullAccess ? (NativeMethods.SERVICE_ALL_ACCESS) : (NativeMethods.SERVICE_QUERY_STATUS|NativeMethods.SERVICE_START|NativeMethods.SERVICE_STOP|NativeMethods.STANDARD_RIGHTS_READ);
 
-            IntPtr  serviceHandle = NativeMethods.OpenService(_handle, serviceName, dr);
-
+            var serviceHandle = NativeMethods.OpenService(_handle, serviceName, dr);
             if (serviceHandle==IntPtr.Zero)
                 throw NativeMethods.NewSystemError("Open service '" + serviceName + "' failed");
 
@@ -123,11 +120,10 @@ namespace Jannesen.Service.Windows
         }
         public              void                            StopService()
         {
-            NativeMethods.SERVICE_STATUS    service_status = new NativeMethods.SERVICE_STATUS();
+            var service_status = new NativeMethods.SERVICE_STATUS();
 
             if (!NativeMethods.ControlService(_handle, NativeMethods.SERVICE_CONTROL.STOP, ref service_status)) {
-                UInt32      err = (UInt32)Marshal.GetLastWin32Error();
-
+                var err = (UInt32)Marshal.GetLastWin32Error();
                 if (err != 1062)
                     throw NativeMethods.NewSystemError("Stop service '" + _serviceName + "' failed", err);
             }

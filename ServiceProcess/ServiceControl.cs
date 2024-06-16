@@ -35,8 +35,8 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
 
-            using (ServiceManager serviceManager = new ServiceManager(null, true)) {
-                bool    fcreate = false;
+            using (var serviceManager = new ServiceManager(null, true)) {
+                var fcreate = false;
 
                 try {
                     using (var service = serviceManager.OpenService(serviceName)) {
@@ -62,7 +62,7 @@ namespace Jannesen.Service.ServiceProcess
 
             Console.WriteLine("# remove service: " + serviceName);
 
-            using (ServiceManager serviceManager = new ServiceManager(null, true)) {
+            using (var serviceManager = new ServiceManager(null, true)) {
                 try {
                     using (var service = serviceManager.OpenService(serviceName))
                         service.DeleteService();
@@ -77,7 +77,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             ArgumentNullException.ThrowIfNull(serviceName);
 
-            using (ServiceManager serviceManager = new ServiceManager()) {
+            using (var serviceManager = new ServiceManager()) {
                 using (var service = serviceManager.OpenService(serviceName)) {
                     service.StartService();
                 }
@@ -87,7 +87,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             ArgumentNullException.ThrowIfNull(serviceName);
 
-            using (ServiceManager serviceManager = new ServiceManager()) {
+            using (var serviceManager = new ServiceManager()) {
                 using (var service = serviceManager.OpenService(serviceName)) {
                     service.StopService();
                 }
