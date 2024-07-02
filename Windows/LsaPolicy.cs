@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Jannesen.Service.Windows
 {
-    sealed class LsaPolicy : IDisposable
+    sealed class LsaPolicy: IDisposable
     {
-        private IntPtr      _policyHandle = IntPtr.Zero;
+        private                         IntPtr      _policyHandle = IntPtr.Zero;
 
         public unsafe                   LsaPolicy()
         {

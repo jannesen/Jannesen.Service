@@ -44,12 +44,7 @@ namespace Jannesen.Service.ServiceProcess
         private                 NativeMethods.SERVICE_STATUS    _serviceStatus;
         private static readonly object                          _lockErrorToString = new object();
 
-        public                  bool                            RuningOnConsole
-        {
-            get {
-                return _console;
-            }
-        }
+        public                  bool                            RuningOnConsole     => _console;
 
         protected                                               ServiceBase()
         {

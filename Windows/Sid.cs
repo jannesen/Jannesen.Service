@@ -9,29 +9,31 @@ namespace Jannesen.Service.Windows
 
         public readonly byte[]?             sid;
 
-        public static   Sid                 Nobody                              { get { return new Sid(0,0); } }
-        public static   Sid                 Everyone                            { get { return new Sid(1,0); } }
-        public static   Sid                 CreatorOwner                        { get { return new Sid(3,0); } }
-        public static   Sid                 CreatorGroup                        { get { return new Sid(3,1); } }
-        public static   Sid                 Dialup                              { get { return new Sid(5,1); } }
-        public static   Sid                 Network                             { get { return new Sid(5,2); } }
-        public static   Sid                 Batch                               { get { return new Sid(5,3); } }
-        public static   Sid                 Interactive                         { get { return new Sid(5,4); } }
-        public static   Sid                 Service                             { get { return new Sid(5,6); } }
-        public static   Sid                 Anonymous                           { get { return new Sid(5,7); } }
-        public static   Sid                 EnterpriseControllers               { get { return new Sid(5,9); } }
-        public static   Sid                 PrincipalSelf                       { get { return new Sid(5,10); } }
-        public static   Sid                 AuthenticatedUsers                  { get { return new Sid(5,11); } }
-        public static   Sid                 TerminalServerUsers                 { get { return new Sid(5,13); } }
-        public static   Sid                 LocalSystem                         { get { return new Sid(5,18); } }
-        public static   Sid                 Administrators                      { get { return new Sid(5,32,544); } }
-        public static   Sid                 Users                               { get { return new Sid(5,32,545); } }
-        public static   Sid                 Guests                              { get { return new Sid(5,32,546); } }
-        public static   Sid                 PowerUsers                          { get { return new Sid(5,32,547); } }
-        public static   Sid                 AccountOperators                    { get { return new Sid(5,32,548); } }
-        public static   Sid                 ServerOperators                     { get { return new Sid(5,32,549); } }
-        public static   Sid                 PrintOperators                      { get { return new Sid(5,32,550); } }
-        public static   Sid                 BackupOperators                     { get { return new Sid(5,32,551); } }
+        public static   Sid                 Nobody                              => new Sid(0,0);
+        public static   Sid                 Everyone                            => new Sid(1,0);
+        public static   Sid                 CreatorOwner                        => new Sid(3,0);
+        public static   Sid                 CreatorGroup                        => new Sid(3,1);
+        public static   Sid                 Dialup                              => new Sid(5,1);
+        public static   Sid                 Network                             => new Sid(5,2);
+        public static   Sid                 Batch                               => new Sid(5,3);
+        public static   Sid                 Interactive                         => new Sid(5,4);
+        public static   Sid                 Service                             => new Sid(5,6);
+        public static   Sid                 Anonymous                           => new Sid(5,7);
+        public static   Sid                 EnterpriseControllers               => new Sid(5,9);
+        public static   Sid                 PrincipalSelf                       => new Sid(5,10);
+        public static   Sid                 AuthenticatedUsers                  => new Sid(5,11);
+        public static   Sid                 TerminalServerUsers                 => new Sid(5,13);
+        public static   Sid                 LocalSystem                         => new Sid(5,18);
+        public static   Sid                 Administrators                      => new Sid(5,32,544);
+        public static   Sid                 Users                               => new Sid(5,32,545);
+        public static   Sid                 Guests                              => new Sid(5,32,546);
+        public static   Sid                 PowerUsers                          => new Sid(5,32,547);
+        public static   Sid                 AccountOperators                    => new Sid(5,32,548);
+        public static   Sid                 ServerOperators                     => new Sid(5,32,549);
+        public static   Sid                 PrintOperators                      => new Sid(5,32,550);
+        public static   Sid                 BackupOperators                     => new Sid(5,32,551);
+
+        public                  bool        IsNull                              => sid==null;
 
         public                              Sid(byte[]? sid)
         {
@@ -91,13 +93,6 @@ namespace Jannesen.Service.Windows
             }
             else
                 this.sid = null;
-        }
-
-        public                  bool        IsNull
-        {
-            get {
-                return sid==null;
-            }
         }
 
         public static           Sid         AccountSid(string accountName)

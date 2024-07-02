@@ -479,10 +479,10 @@ namespace Jannesen.Service.ServiceProcess
 
     public class InstallerException: Exception
     {
-        public              InstallerException(string message) : base(message)
+        public              InstallerException(string message): base(message)
         {
         }
-        public              InstallerException(string message, Exception innerException) : base(message, innerException)
+        public              InstallerException(string message, Exception innerException): base(message, innerException)
         {
         }
     }
