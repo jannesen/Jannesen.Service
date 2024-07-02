@@ -431,7 +431,7 @@ namespace Jannesen.Service.ServiceProcess
 
             if (!Directory.Exists(path)) {
                 var p = Path.GetDirectoryName(path);
-                if (p != null) {
+                if (!string.IsNullOrEmpty(p)) {
                     CreatePath(p);
                 }
 

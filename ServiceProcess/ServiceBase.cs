@@ -760,6 +760,8 @@ namespace Jannesen.Service.ServiceProcess
                 var datetime      = new DateTime(day * TimeSpan.TicksPerDay);
                 var baseFileName  = _debugLogDirectory + @"\" + datetime.ToString(@"yyyy\\MM\\", CultureInfo.InvariantCulture) + _serviceName + datetime.ToString(@"-yyyy-MM-dd", CultureInfo.InvariantCulture);
                 var directoryName = Path.GetDirectoryName(baseFileName)!;
+                if (string.IsNullOrEmpty(directoryName))
+                    throw new Exception("Can't GetDirectoryName of '" + directoryName + "'.");
 
                 if (!Directory.Exists(directoryName))
                     Directory.CreateDirectory(directoryName);
