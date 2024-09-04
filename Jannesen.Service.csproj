@@ -4,11 +4,11 @@
         <AssemblyName>Jannesen.Service</AssemblyName>
         
         <OutputType>Library</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
-        <InvariantGlobalization>true</InvariantGlobalization>
+        <TargetFramework>net80</TargetFramework>
         <Platforms>x64</Platforms>
-        <PlatformTarget>x64</PlatformTarget>
-               
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
@@ -22,7 +22,7 @@
         <Authors>Peter Jannesen</Authors>
         <RepositoryUrl>https://github.com/jannesen/Jannesen.Service</RepositoryUrl>
     </PropertyGroup>
-
+        
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisLevel>latest</AnalysisLevel>

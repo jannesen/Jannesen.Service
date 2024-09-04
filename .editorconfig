@@ -100,3 +100,10 @@ dotnet_diagnostic.IDE0007.severity = warning
 csharp_style_var_for_built_in_types =  true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_var_elsewhere = true:suggestion
+
+#----------------------------------------
+# Workaround WPF en Windows in output.
+# <TargetFramework>net80-windows</TargetFramework> also include WPF and WinForm assemblies in output. We are target to window services.
+# So use <TargetFramework>net80</TargetFramework> and ignore the warnings.
+# CA1416: Validate platform compatibility
+dotnet_diagnostic.CA1416.severity = none

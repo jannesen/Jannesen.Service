@@ -395,10 +395,8 @@ namespace Jannesen.Service.ServiceProcess
                                  err is System.Runtime.InteropServices.SafeArrayTypeMismatchException ||
                                  err is System.Runtime.Serialization.SerializationException ||
                                  err is System.Security.Cryptography.CryptographicException ||
-                                 err is System.Security.Policy.PolicyException ||
                                  err is System.Security.SecurityException ||
                                  err is System.Security.VerificationException ||
-                                 err is System.Security.XmlSyntaxException ||
                                  err is System.StackOverflowException ||
                                  err is System.Threading.SynchronizationLockException ||
                                  err is System.Threading.ThreadInterruptedException ||
