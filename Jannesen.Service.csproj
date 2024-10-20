@@ -2,13 +2,13 @@
     <PropertyGroup>
         <RootNamespace>Jannesen.Service</RootNamespace>
         <AssemblyName>Jannesen.Service</AssemblyName>
-        
+
         <OutputType>Library</OutputType>
         <TargetFramework>net80</TargetFramework>
         <Platforms>x64</Platforms>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <InvariantGlobalization>true</InvariantGlobalization>
-        
+
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
@@ -16,13 +16,13 @@
         <AssemblyOriginatorKeyFile>Jannesen.Service.snk</AssemblyOriginatorKeyFile>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
-        
+
         <Company>Jannesen B.V.</Company>
         <Version>1.10.00.001</Version>
         <Authors>Peter Jannesen</Authors>
         <RepositoryUrl>https://github.com/jannesen/Jannesen.Service</RepositoryUrl>
     </PropertyGroup>
-        
+
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisLevel>latest</AnalysisLevel>
@@ -30,20 +30,20 @@
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
-    
+
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      <DebugSymbols>true</DebugSymbols>
-      <DebugType>full</DebugType>
-      <Optimize>false</Optimize>
-      <OutputPath>bin\Release</OutputPath>
-      <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Release</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-      <DebugType>pdbonly</DebugType>
-      <Optimize>true</Optimize>
-      <OutputPath>bin\Debug</OutputPath>
-      <DefineConstants>TRACE</DefineConstants>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Debug</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -55,6 +55,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Jannesen.Configuration.Settings\Jannesen.Configuration.Settings.csproj" />
+        <ProjectReference Include="..\Jannesen.Configuration.Settings\Jannesen.Configuration.Settings.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove=".git" />
     </ItemGroup>
 </Project>

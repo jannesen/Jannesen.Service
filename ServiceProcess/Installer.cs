@@ -258,7 +258,7 @@ namespace Jannesen.Service.ServiceProcess
                         fileInfo.SetAccessControl(acl);
                     }
                     else {
-                        if (si != null && File.Exists(path)) { 
+                        if (si != null && File.Exists(path)) {
                             Console.WriteLine("# remove acl on file: " + path);
                             var fileInfo = new FileInfo(path);
                             var acl      = fileInfo.GetAccessControl();
