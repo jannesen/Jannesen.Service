@@ -15,16 +15,16 @@ namespace Jannesen.Service.ServiceProcess
     public interface IServiceLogger
     {
         bool    LogDebugActive                      { get; }
-        void    LogError(Exception err);
-        void    LogDebug(object source, string message);
-        void    LogDebug(object source, Exception err);
-        void    LogDebug(object source, string type, string message);
-        void    LogDebug(object source, string type, string message, object data);
-        void    LogInfo(object source, string message);
-        void    LogWarning(object source, string message);
-        void    LogWarning(object source, Exception err);
-        void    LogError(object source, string message);
-        void    LogError(object source, Exception err);
-        void    LogWrite(EventLogEntryType type, string source, string message);
+        void    LogError(Exception? err);
+        void    LogDebug(object? source, string? message);
+        void    LogDebug(object? source, Exception? err);
+        void    LogDebug(object? source, string? type, string? message);
+        void    LogDebug(object? source, string? type, string? message, object? data);
+        void    LogInfo(object? source, string? message);
+        void    LogWarning(object? source, string? message);
+        void    LogWarning(object? source, Exception? err);
+        void    LogError(object? source, string? message);
+        void    LogError(object? source, Exception err);
+        void    LogWrite(EventLogEntryType type, string? source, string? message);
     }
 }

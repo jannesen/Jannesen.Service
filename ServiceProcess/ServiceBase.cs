@@ -175,7 +175,7 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public                  void                            LogError(Exception error)
+        public                  void                            LogError(Exception? error)
         {
             LogError(null, ErrorToString(error, true));
         }
@@ -195,7 +195,7 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public                  void                            LogDebug(object? source, string? type, string? message, object data)
+        public                  void                            LogDebug(object? source, string? type, string? message, object? data)
         {
             if (_debugLogActive) {
                 lock(_logLock) {
@@ -215,7 +215,7 @@ namespace Jannesen.Service.ServiceProcess
         {
             LogWrite(EventLogEntryType.Warning, SafeToString(source), ErrorToString(error, false));
         }
-        public                  void                            LogError(object? source, string ?message)
+        public                  void                            LogError(object? source, string? message)
         {
             LogWrite(EventLogEntryType.Error, SafeToString(source), message);
         }
