@@ -301,7 +301,13 @@ namespace Jannesen.Service.ServiceProcess
 
                 var accountName = "NT SERVICE\\" + ServiceName;
 
-                using (var sqlConnection = new SqlConnection("Server=" + server + ";Database=" + database + ";Current Language=us_english;Connection Reset=false;Connect Timeout=15;Pooling=No;Trusted_Connection=true")) {
+                using (var sqlConnection = new SqlConnection("Server="     + server           +
+                                                             ";Database="  + database         +
+                                                             ";Current Language=us_english"   +
+                                                             ";Connect Timeout=15"            +
+                                                             ";Connect Retry Count=0"         +
+                                                             ";Integrated Security=true"      +
+                                                             ";Trust Server Certificate=true")) {
                     sqlConnection.Open();
 
                     using (var sqlCmd = new SqlCommand() { Connection = sqlConnection, CommandType = System.Data.CommandType.Text }) {
