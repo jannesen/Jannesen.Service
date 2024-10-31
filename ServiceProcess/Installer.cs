@@ -235,7 +235,7 @@ namespace Jannesen.Service.ServiceProcess
                 }
             }
         }
-        public              void                SetAclFile(string path, FileSystemRights rights)
+        public              void                SetAclFile(string? path, FileSystemRights rights)
         {
             if (path != null) {
                 try {
