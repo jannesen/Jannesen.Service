@@ -115,7 +115,7 @@ namespace Jannesen.Service.ServiceProcess
         public              void                CreateEventSource()
         {
             try {
-                Console.WriteLine("# Create event source: " + ServiceName);
+                Console.WriteLine("# create event source: " + ServiceName);
 
                 if (!System.Diagnostics.EventLog.SourceExists(ServiceName))
                     System.Diagnostics.EventLog.CreateEventSource(ServiceName, ServiceBase.EventLogName);
@@ -296,7 +296,7 @@ namespace Jannesen.Service.ServiceProcess
             ArgumentNullException.ThrowIfNull(role);
 
             try {
-                if (string.CompareOrdinal(AccountName, "NT SERVICE") != 0)
+                if (string.Compare(AccountName, "NT SERVICE", StringComparison.OrdinalIgnoreCase) != 0)
                     return ;
 
                 var accountName = "NT SERVICE\\" + ServiceName;
